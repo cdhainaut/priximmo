@@ -4,3 +4,4 @@ seaborn
 bs4
 matplotlib
 scipy
+requests
