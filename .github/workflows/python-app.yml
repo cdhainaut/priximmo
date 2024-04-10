@@ -4,6 +4,7 @@
 name: Update Charts
 
 on:
+  workflow_dispatch: # Put here!!
   schedule:
     - cron: "0 0 1 * *"
 
