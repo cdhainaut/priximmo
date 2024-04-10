@@ -23,12 +23,12 @@ communes_dict = {
     # "Roscanvel": {"depart": 29, "ninsee": 29238},
     # "Camaret": {"depart": 29, "ninsee": 29022},
     # "Lanveoc": {"depart": 29, "ninsee": 29120},
-    #"Crozon": {"depart": 29, "ninsee": 29042},
+    # "Crozon": {"depart": 29, "ninsee": 29042},
     # "Telgruc": {"depart": 29, "ninsee": 29280},
     # "Argol": {"depart": 29, "ninsee": 29001},
     # "Landevennec": {"depart": 29, "ninsee": 29104},
     "Brest": {"depart": 29, "ninsee": 29019},
-    # "Lorient": {"depart": 56, "ninsee": 56121}
+    "Lorient": {"depart": 56, "ninsee": 56121},
 }
 all_csv = []
 dfs = []
@@ -69,6 +69,7 @@ def high_pass_filter(data, cutoff_freq, fs):
     return y
 
 
+
 df.set_index("date_mutation", inplace=True)
 df_resampled = (
     df.groupby("nom_commune")[["valeur_fonciere", "prixm2"]].resample("D").mean()
@@ -79,13 +80,20 @@ df_resampled = df_resampled.groupby("nom_commune").transform(
 
 # Apply the high-pass filter
 df_resampled["prixm2_smooth"] = df_resampled.groupby("nom_commune")["prixm2"].transform(
-    lambda x: x - high_pass_filter(x, cutoff_freq=0.01, fs=1)
+    lambda x: x
+    - high_pass_filter(x, cutoff_freq=0.025, fs=1)
 )
 
 
 ys = ["prixm2_smooth"]  # , "valeur_fonciere"]
 for y in ys:
-    sns.lineplot(data=df_resampled, x="date_mutation", hue="nom_commune", y=y)
+    sns.lineplot(
+        data=df_resampled,
+        x="date_mutation",
+        hue="nom_commune",
+        style="nom_commune",
+        y=y,
+    )
     plt.tight_layout()
     plt.savefig("assets/prixm2.svg")
     plt.show()
