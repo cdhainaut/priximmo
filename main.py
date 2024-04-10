@@ -87,4 +87,5 @@ ys = ["prixm2_smooth"]  # , "valeur_fonciere"]
 for y in ys:
     sns.lineplot(data=df_resampled, x="date_mutation", hue="nom_commune", y=y)
     plt.tight_layout()
+    plt.savefig("assets/prixm2.svg")
     plt.show()
