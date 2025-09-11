@@ -1,0 +1,36 @@
+# --- Sources & filtres ---
+communes:
+  # Brest:   { depart: 29, ninsee: 29019 }
+  # Lorient: { depart: 56, ninsee: 56121 }
+  Pont_LAbbe: {depart: 29, ninsee: 29220 }
+  Ploneour: {depart: 29, ninsee: 29174}
+  Plomeur: {depart: 29, ninsee: 29171}
+  Tremeoc: {depart: 29, ninsee: 29296}
+url_root: "https://files.data.gouv.fr/geo-dvf/latest/csv/"
+
+filters:
+  type_local: ["Maison"]
+  valeur_fonciere_max: 500000
+  surface_min: 60
+  surface_max: 300
+
+# --- Grouping ---
+group_by: "commune"        # "commune" | "groupe"
+groups:                    # optionnel: cohortes perso (si group_by = "groupe")
+  # Brest: ["Brest"]
+  Finistere Sud: ["Pont_LAbbe","Ploneour","Plomeur","Tremeoc"]
+include_overall: false # ajoute une série "Global (sélection)"
+
+min_n_per_month: null      # ex: 5 pour masquer mois maigres
+
+# --- Lissage ---
+smoothing:
+  kind: "rolling_median"   # "rolling_mean" | "rolling_median" | "ewm"
+  window_months: 3
+  center: true
+  ewm_span: 3
+
+# --- Sorties ---
+outputs:
+  metrics_csv: "outputs/metrics_communes_monthly.csv"
+  report_pdf:  "reports/rapport_dvf.pdf"
