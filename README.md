@@ -13,6 +13,10 @@
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" />
 </p>
 
+<p align="center">
+  <img src="docs/assets/fig_dashboard.svg" alt="Dashboard" width="100%" />
+</p>
+
 ---
 
 ## Fonctionnalites
@@ -26,6 +30,46 @@
 | Impact des taux         | Simulation de capacite d'emprunt, sensibilite aux taux, pouvoir d'achat indexe                      |
 | Estimateur renovation   | Chiffrage detaille des travaux de renovation (gros oeuvre, second oeuvre, finitions)                  |
 | Rapports PDF            | Generation de rapports multi-pages avec graphiques de tendances, signaux et previsions               |
+
+---
+
+## Apercu des graphiques
+
+### Tendances de prix et bande IQR
+
+<p align="center">
+  <img src="docs/assets/fig_trend.svg" alt="Trend" width="90%" />
+</p>
+
+### Signaux achat / vente
+
+<p align="center">
+  <img src="docs/assets/fig_signals.svg" alt="Signals" width="90%" />
+</p>
+
+### Previsions (Prophet + regression lineaire)
+
+<p align="center">
+  <img src="docs/assets/fig_forecast.svg" alt="Forecast" width="90%" />
+</p>
+
+<p align="center">
+  <img src="docs/assets/fig_rates.svg" alt="Rates" width="48%" />
+  <img src="docs/assets/fig_renovation.svg" alt="Renovation" width="48%" />
+</p>
+
+<p align="center">
+  <em>Gauche : impact des taux d'interet sur la capacite d'emprunt.
+  Droite : ventilation des couts de renovation (waterfall).</em>
+</p>
+
+### Volume de transactions
+
+<p align="center">
+  <img src="docs/assets/fig_volume.svg" alt="Volume" width="90%" />
+</p>
+
+---
 
 ## Architecture
 
@@ -76,9 +120,28 @@ flowchart LR
 
 ```bash
 pip install -e .
+
+# Telecharger les donnees DVF
 immo fetch -c config/default.yml
+
+# Analyser les tendances et generer les signaux achat/vente
 immo analyze -c config/default.yml
+
+# Generer le rapport PDF
 immo report -c config/default.yml
+```
+
+Commandes supplementaires :
+
+```bash
+# Previsions sur 12 mois
+immo forecast -c config/default.yml --horizon 12
+
+# Impact des taux d'interet
+immo rates -c config/default.yml --rate 0.03 --rate 0.035 --rate 0.04
+
+# Estimation renovation maison pierre 120 m2
+immo renovation --surface 120
 ```
 
 ## Installation
@@ -114,52 +177,28 @@ Toutes les commandes acceptent l'option `--config / -c` pour specifier un fichie
 
 ## Configuration
 
-Le fichier `config/default.yml` controle l'ensemble du pipeline. Structure :
+Le fichier `config/default.yml` controle l'ensemble du pipeline :
 
 ```yaml
-# Communes a analyser (code departement + code INSEE)
 communes:
-  Brest:
-    depart: 29
-    ninsee: 29019
+  Brest:   { depart: 29, ninsee: 29019 }
+  Lorient: { depart: 56, ninsee: 56121 }
+  Le Havre: { depart: 76, ninsee: 76351 }
 
-# URL racine des fichiers DVF
-url_root: "https://files.data.gouv.fr/geo-dvf/latest/csv/"
-
-# Filtres appliques aux transactions
 filters:
   type_local: ["Appartement"]
   valeur_fonciere_max: 500000
   surface_min: 60
   surface_max: 300
 
-# Regroupement geographique : "commune" | "groupe" | "departement" | "region"
-grouping:
-  group_by: "commune"
-  include_overall: false
-
-# Lissage des series temporelles
 smoothing:
-  kind: "rolling_median"    # "rolling_mean" | "rolling_median" | "ewm"
+  kind: "rolling_median"
   window_months: 4
 
-# Taux d'interet pour les simulations
-interest_rates:
-  source: "manual"
-  manual_rates: [0.02, 0.025, 0.03, 0.035, 0.04]
-  loan_duration_years: 25
-
-# Previsions
 forecast:
   enabled: true
   horizon_months: 12
-  model: "ensemble"         # "prophet" | "linear" | "ensemble"
-
-# Chemins de sortie
-outputs:
-  metrics_csv: "outputs/metrics_communes_monthly.csv"
-  report_pdf: "reports/rapport_dvf.pdf"
-  charts_dir: "charts"
+  model: "ensemble"
 ```
 
 | Section           | Role                                                                                  |
@@ -176,55 +215,48 @@ outputs:
 
 ```
 src/immo/
-    __init__.py
     cli.py                      # Point d'entree CLI (Typer)
     config.py                   # Modeles Pydantic de configuration
     analysis/
-        __init__.py
         forecasting.py          # Prophet, regression lineaire, ensemble
         rates.py                # Calculs de taux, capacite d'emprunt
         signals.py              # Signaux achat/vente (5 indicateurs)
         trends.py               # Agregation mensuelle, metriques derivees
     renovation/
-        __init__.py
         charts.py               # Graphiques de ventilation des couts
         estimator.py            # Moteur de chiffrage renovation
         models.py               # Modeles Pydantic (dimensions, postes)
     scrapers/
-        __init__.py
         dvf.py                  # Telechargement et cache DVF (Parquet)
         insee.py                # Donnees INSEE complementaires
         interest_rates.py       # Recuperation des taux d'interet
     utils/
-        __init__.py
         filters.py              # Lissage et filtrage de series
         geo.py                  # Utilitaires geographiques
     viz/
-        __init__.py
         market.py               # Graphiques de marche (tendances, volumes)
         reports.py              # Generation de rapports PDF multi-pages
         signals.py              # Visualisation des signaux achat/vente
 ```
 
+## Regenerer les graphiques
+
+Les graphiques du README sont generes par le script :
+
+```bash
+python scripts/generate_readme_charts.py
+```
+
+Le workflow GitHub Actions `data-refresh.yml` regenere automatiquement ces graphiques chaque mois avec les dernieres donnees DVF.
+
 ## Contributing
 
 ```bash
-# Linting et formatage
 ruff check src/ tests/
 ruff format src/ tests/
-
-# Verification de types
 mypy src/immo/
-
-# Tests
 pytest
 ```
-
-Avant de soumettre une contribution :
-
-1. Le code doit passer `ruff check` sans erreur.
-2. `mypy --strict` ne doit produire aucune erreur.
-3. Les tests existants doivent rester au vert (`pytest`).
 
 ## License
 
