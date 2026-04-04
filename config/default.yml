@@ -1,0 +1,60 @@
+# ============================================================
+# immo - Configuration par defaut
+# ============================================================
+
+# --- Sources (communes) ------------------------------------
+communes:
+  Brest:
+    depart: 29
+    ninsee: 29019
+  Lorient:
+    depart: 56
+    ninsee: 56121
+  Le Havre:
+    depart: 76
+    ninsee: 76351
+
+url_root: "https://files.data.gouv.fr/geo-dvf/latest/csv/"
+
+# --- Filtres DVF -------------------------------------------
+filters:
+  type_local: ["Appartement"]
+  valeur_fonciere_max: 500000
+  surface_min: 60
+  surface_max: 300
+
+# --- Regroupement ------------------------------------------
+grouping:
+  group_by: "commune"           # "commune" | "groupe" | "departement" | "region"
+  # groups:                     # cohortes perso (si group_by = "groupe")
+  #   Bretagne Ouest: ["Brest", "Lorient"]
+  #   Normandie: ["Le Havre"]
+  include_overall: false
+  min_n_per_month: null         # ex: 5 pour masquer les mois maigres
+
+# --- Lissage -----------------------------------------------
+smoothing:
+  kind: "rolling_median"        # "rolling_mean" | "rolling_median" | "ewm"
+  window_months: 4
+  center: true
+  ewm_span: 4
+
+# --- Sorties -----------------------------------------------
+outputs:
+  metrics_csv: "outputs/metrics_communes_monthly.csv"
+  report_pdf: "reports/rapport_dvf.pdf"
+  charts_dir: "charts"
+
+# --- Taux d'interet ----------------------------------------
+interest_rates:
+  source: "manual"              # "banque_de_france" | "manual"
+  manual_rates: [0.02, 0.025, 0.03, 0.035, 0.04]
+  loan_duration_years: 25
+  insurance_rate: 0.003
+  debt_ratio: 0.34
+
+# --- Previsions --------------------------------------------
+forecast:
+  enabled: true
+  horizon_months: 12
+  model: "ensemble"             # "prophet" | "linear" | "ensemble"
