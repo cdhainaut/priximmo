@@ -184,6 +184,10 @@ def rate_adjusted_signal(
     pd.Series
         Z-score of payment-per-m2.  Negative = affordable = buy bias.
     """
+    # Guard: if rates appear to be percentages (values > 1), convert to decimals
+    if (rates.dropna() > 1).any():
+        rates = rates / 100
+
     n_months = loan_duration * 12
     monthly_rate = rates / 12
     monthly_insurance = insurance_rate / 12
@@ -267,6 +271,14 @@ def composite_signal(
         recommendation.
     """
     w = dict(_DEFAULT_WEIGHTS if weights is None else weights)
+
+    # Normalise rate_history column names to expected convention
+    if rate_history is not None and not rate_history.empty:
+        if "date" in rate_history.columns and "date_mutation" not in rate_history.columns:
+            rate_history = rate_history.rename(columns={"date": "date_mutation"})
+        if "rate_pct" in rate_history.columns and "rate" not in rate_history.columns:
+            rate_history = rate_history.copy()
+            rate_history["rate"] = rate_history["rate_pct"] / 100
 
     # If no rate data, redistribute rate_adjusted weight proportionally
     has_rates = rate_history is not None and not rate_history.empty

@@ -6,8 +6,6 @@ and ECB, with fallback to manually-supplied data.
 
 from __future__ import annotations
 
-from datetime import date, datetime
-
 import httpx
 import pandas as pd
 from loguru import logger

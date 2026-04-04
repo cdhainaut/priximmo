@@ -237,7 +237,7 @@ def generate_signal_report(
                     {
                         "date": s.date,
                         "commune": s.commune,
-                        "signal_type": s.signal_type,
+                        "signal_type": s.signal_type.value,
                         "confidence": s.confidence,
                     }
                     for s in signals
@@ -315,7 +315,7 @@ def generate_full_report(
                     {
                         "date": s.date,
                         "commune": s.commune,
-                        "signal_type": s.signal_type,
+                        "signal_type": s.signal_type.value,
                         "confidence": s.confidence,
                     }
                     for s in signals

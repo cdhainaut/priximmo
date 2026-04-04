@@ -48,7 +48,7 @@ class FiltersConfig(BaseModel):
 class SmoothingConfig(BaseModel):
     """Parametres de lissage des series temporelles."""
 
-    kind: Literal["rolling_median", "rolling_mean", "ewm"] = "rolling_median"
+    kind: Literal["rolling_median", "rolling_mean", "ewm", "butterworth"] = "rolling_median"
     window_months: int = Field(4, description="Fenetre en mois pour rolling_*")
     center: bool = True
     ewm_span: int = Field(4, description="Span pour le lissage exponentiel")

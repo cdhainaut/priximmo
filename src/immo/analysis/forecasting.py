@@ -150,7 +150,7 @@ def forecast_linear(
     dates = pd.to_datetime(s.index)
     t = np.arange(len(s), dtype=float)
 
-    slope, intercept, r_value, p_value, std_err = stats.linregress(t, s.values)
+    slope, intercept, _r_value, _p_value, std_err = stats.linregress(t, s.values)
 
     # Residual standard error
     fitted = intercept + slope * t
@@ -172,14 +172,13 @@ def forecast_linear(
     )
 
     # Build date index for full period
-    freq = pd.tseries.frequencies.to_offset("MS")
     last_date = dates[-1]
     future_dates = pd.date_range(
         start=last_date + pd.DateOffset(months=1),
         periods=horizon_months,
         freq="MS",
     )
-    all_dates = dates.append(future_dates)
+    all_dates = dates.union(future_dates)
 
     return pd.DataFrame(
         {
@@ -332,7 +331,7 @@ def backtest(
     dates_out = test_dates[:n]
 
     mae = float(np.mean(np.abs(actual - predicted)))
-    mape = float(np.mean(np.abs((actual - predicted) / np.where(actual == 0, np.nan, actual)))) * 100
+    mape = float(np.nanmean(np.abs((actual - predicted) / np.where(actual == 0, np.nan, actual)))) * 100
     rmse = float(np.sqrt(np.mean((actual - predicted) ** 2)))
 
     predictions_df = pd.DataFrame(

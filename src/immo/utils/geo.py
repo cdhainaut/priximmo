@@ -6,7 +6,6 @@ functions for geographic lookups.
 
 from __future__ import annotations
 
-from loguru import logger
 
 
 # ---------------------------------------------------------------------------
@@ -165,11 +164,6 @@ def communes_in_department(department: int) -> list[dict]:
         Each dict contains ``"insee_code"`` (int), ``"name"`` (str),
         and ``"postal_codes"`` (list[str]).  Currently returns ``[]``.
     """
-    logger.debug(
-        "communes_in_department({}) is a placeholder -- "
-        "implement with INSEE COG data for production use",
-        department,
-    )
     # Structure for future implementation:
     # url = f"https://geo.api.gouv.fr/departements/{dept_str}/communes"
     # resp = httpx.get(url, params={"fields": "nom,code,codesPostaux"})

@@ -106,8 +106,8 @@ def _labor_unit_from_hourly(
     """Calcule le coût MO unitaire (€/unité) à partir du taux horaire et de la productivité."""
     if productivity_per_hour <= 0 or team_size <= 0:
         return 0.0
-    hours_per_unit = 1.0 / (productivity_per_hour * team_size)
-    return rate * hours_per_unit
+    hours_per_unit = 1.0 / productivity_per_hour
+    return rate * team_size * hours_per_unit
 
 
 # ---------------------------------------------------------------------------

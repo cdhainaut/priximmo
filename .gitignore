@@ -16,3 +16,8 @@ data/*.parquet
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
+*.csv
+*.pdf
+.coverage
+htmlcov/
+*.parquet

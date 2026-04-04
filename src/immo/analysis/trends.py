@@ -41,10 +41,14 @@ def monthly_aggregate(
     tmp["date_mutation"] = pd.to_datetime(tmp["date_mutation"])
     tmp = tmp.set_index("date_mutation").sort_index()
 
-    grouped = tmp.groupby(label_col).resample("MS")["prix_m2"]
+    grouped = tmp.groupby(label_col).resample("MS")
 
-    agg = grouped.agg(["median", lambda s: s.quantile(0.25), lambda s: s.quantile(0.75), "count"])
-    agg.columns = ["prix_m2_median", "prix_m2_p25", "prix_m2_p75", "n_transactions"]
+    agg = grouped.agg(
+        prix_m2_median=pd.NamedAgg(column="prix_m2", aggfunc="median"),
+        prix_m2_p25=pd.NamedAgg(column="prix_m2", aggfunc=lambda s: s.quantile(0.25)),
+        prix_m2_p75=pd.NamedAgg(column="prix_m2", aggfunc=lambda s: s.quantile(0.75)),
+        n_transactions=pd.NamedAgg(column="prix_m2", aggfunc="count"),
+    )
     agg = agg.reset_index()
 
     return agg.sort_values([label_col, "date_mutation"]).reset_index(drop=True)
@@ -64,9 +68,9 @@ def add_derived_metrics(
 
     Added columns:
     - ``prix_m2_smooth`` -- smoothed median price via :func:`~immo.utils.filters.smooth`.
-    - ``pct_change_3m`` -- 3-month percent change of median price.
-    - ``pct_change_12m`` -- 12-month (year-over-year) percent change.
-    - ``volatility_6m`` -- 6-month rolling standard deviation.
+    - ``pct_chg_3m`` -- 3-month percent change of median price.
+    - ``pct_chg_12m`` -- 12-month (year-over-year) percent change.
+    - ``vol_6m`` -- 6-month rolling standard deviation.
     - ``anomaly_score`` -- deviation of raw median from smooth, normalised by IQR.
 
     Parameters
@@ -91,9 +95,9 @@ def add_derived_metrics(
         s = sub["prix_m2_median"]
         sub = sub.copy()
         sub["prix_m2_smooth"] = smooth_series(s, kind=smoothing_kind, window=window)
-        sub["pct_change_3m"] = s.pct_change(3) * 100
-        sub["pct_change_12m"] = s.pct_change(12) * 100
-        sub["volatility_6m"] = s.rolling(6, min_periods=3).std()
+        sub["pct_chg_3m"] = s.pct_change(3) * 100
+        sub["pct_chg_12m"] = s.pct_change(12) * 100
+        sub["vol_6m"] = s.rolling(6, min_periods=3).std()
 
         iqr = sub["prix_m2_p75"] - sub["prix_m2_p25"]
         sub["anomaly_score"] = (s - sub["prix_m2_smooth"]) / iqr.replace(0, np.nan)

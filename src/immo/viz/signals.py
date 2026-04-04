@@ -5,13 +5,13 @@ from __future__ import annotations
 from typing import Any, Protocol, Sequence
 
 import matplotlib.dates as mdates
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
-import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib.figure import Figure
+
+from immo.analysis.signals import SignalType
 
 from .market import _auto_interval, _euro_formatter, _format_date_axis, setup_style
 
@@ -22,7 +22,7 @@ from .market import _auto_interval, _euro_formatter, _format_date_axis, setup_st
 class SignalLike(Protocol):
     date: Any  # datetime-like
     commune: str
-    signal_type: str  # BUY / SELL / HOLD / STRONG_BUY / STRONG_SELL
+    signal_type: SignalType  # BUY / SELL / HOLD / STRONG_BUY / STRONG_SELL
     confidence: float
     reasons: list[str]
 
@@ -32,43 +32,43 @@ class SignalLike(Protocol):
 # ---------------------------------------------------------------------------
 
 _SIGNAL_COLORS = {
-    "STRONG_BUY": "#006400",
-    "BUY": "#2ca02c",
-    "HOLD": "#ff7f0e",
-    "SELL": "#d62728",
-    "STRONG_SELL": "#8b0000",
+    SignalType.STRONG_BUY: "#006400",
+    SignalType.BUY: "#2ca02c",
+    SignalType.HOLD: "#ff7f0e",
+    SignalType.SELL: "#d62728",
+    SignalType.STRONG_SELL: "#8b0000",
 }
 
 _SIGNAL_LABELS_FR = {
-    "STRONG_BUY": "Achat fort",
-    "BUY": "Achat",
-    "HOLD": "Neutre",
-    "SELL": "Vente",
-    "STRONG_SELL": "Vente forte",
+    SignalType.STRONG_BUY: "Achat fort",
+    SignalType.BUY: "Achat",
+    SignalType.HOLD: "Neutre",
+    SignalType.SELL: "Vente",
+    SignalType.STRONG_SELL: "Vente forte",
 }
 
 _SIGNAL_MARKERS = {
-    "STRONG_BUY": "^",
-    "BUY": "^",
-    "HOLD": "D",
-    "SELL": "v",
-    "STRONG_SELL": "v",
+    SignalType.STRONG_BUY: "^",
+    SignalType.BUY: "^",
+    SignalType.HOLD: "D",
+    SignalType.SELL: "v",
+    SignalType.STRONG_SELL: "v",
 }
 
 _SIGNAL_SIZES = {
-    "STRONG_BUY": 160,
-    "BUY": 100,
-    "HOLD": 60,
-    "SELL": 100,
-    "STRONG_SELL": 160,
+    SignalType.STRONG_BUY: 160,
+    SignalType.BUY: 100,
+    SignalType.HOLD: 60,
+    SignalType.SELL: 100,
+    SignalType.STRONG_SELL: 160,
 }
 
 _SIGNAL_NUMERIC = {
-    "STRONG_BUY": 2,
-    "BUY": 1,
-    "HOLD": 0,
-    "SELL": -1,
-    "STRONG_SELL": -2,
+    SignalType.STRONG_BUY: 2,
+    SignalType.BUY: 1,
+    SignalType.HOLD: 0,
+    SignalType.SELL: -1,
+    SignalType.STRONG_SELL: -2,
 }
 
 
@@ -361,7 +361,9 @@ def fig_signal_heatmap(
 
     df = signals_df.copy()
     df["date"] = pd.to_datetime(df["date"])
-    df["signal_num"] = df["signal_type"].map(_SIGNAL_NUMERIC).fillna(0)
+    df["signal_num"] = df["signal_type"].map(
+        lambda st: _SIGNAL_NUMERIC.get(SignalType(st) if not isinstance(st, SignalType) else st, 0)
+    )
     df["period"] = df["date"].dt.to_period("M").astype(str)
 
     pivot = df.pivot_table(

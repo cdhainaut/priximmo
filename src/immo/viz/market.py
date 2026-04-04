@@ -2,7 +2,6 @@
 """Visualisations du marché immobilier — prix, volumes, tendances."""
 from __future__ import annotations
 
-import calendar
 from typing import Optional
 
 import matplotlib.dates as mdates

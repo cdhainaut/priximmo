@@ -140,7 +140,7 @@ def purchasing_power_index(
         Purchasable surface (m2) at each time step.
     """
     capacity = rate_series.apply(
-        lambda r: borrowing_capacity(reference_salary, r, duration, insurance_rate=insurance_rate)
+        lambda r: borrowing_capacity(reference_salary, r, duration, debt_ratio=0.34, insurance_rate=insurance_rate)
     )
     m2_affordable = capacity / prix_m2_series.replace(0, np.nan)
     return m2_affordable.rename("purchasable_m2")

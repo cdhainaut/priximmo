@@ -56,13 +56,17 @@ def fetch(
     """Telecharger les donnees DVF pour les communes configurees."""
     cfg = _load(config)
 
+    if not cfg.communes:
+        logger.error("Aucune commune configuree. Verifiez votre fichier de configuration.")
+        raise typer.Exit(code=1)
+
     out_path = Path(output) if output else Path("data/dvf.parquet")
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     from immo.scrapers.dvf import cache_to_parquet, fetch_all_communes
 
     communes = {
-        name: {"department": c.department_code, "insee_code": c.insee_code}
+        name: {"depart": c.department_code, "ninsee": c.insee_code}
         for name, c in cfg.communes.items()
     }
     filters = {
@@ -88,6 +92,10 @@ def analyze(
     """Lancer l'analyse de tendances et generer les signaux achat/vente."""
     cfg = _load(config)
 
+    if not cfg.communes:
+        logger.error("Aucune commune configuree. Verifiez votre fichier de configuration.")
+        raise typer.Exit(code=1)
+
     from immo.analysis.trends import add_derived_metrics, add_overall_series, monthly_aggregate
     from immo.analysis.signals import composite_signal, signal_summary
     from immo.scrapers.dvf import fetch_all_communes, load_from_parquet
@@ -100,7 +108,7 @@ def analyze(
     else:
         logger.info("Pas de cache, telechargement en cours...")
         communes = {
-            name: {"department": c.department_code, "insee_code": c.insee_code}
+            name: {"depart": c.department_code, "ninsee": c.insee_code}
             for name, c in cfg.communes.items()
         }
         filters = {
@@ -245,7 +253,7 @@ def forecast(
         raise typer.Exit(code=0)
 
     import pandas as pd
-    from immo.analysis.forecasting import forecast_ensemble, backtest
+    from immo.analysis.forecasting import forecast_ensemble, forecast_prophet, forecast_linear, backtest
 
     metrics_path = cfg.output.metrics_csv
     if not metrics_path.exists():
@@ -255,9 +263,16 @@ def forecast(
     agg = pd.read_csv(metrics_path, parse_dates=["date_mutation"])
     label_col = cfg.grouping.group_by
 
+    if model_name == "prophet":
+        forecast_fn = forecast_prophet
+    elif model_name == "linear":
+        forecast_fn = forecast_linear
+    else:
+        forecast_fn = forecast_ensemble
+
     for commune in agg[label_col].unique():
         logger.info("Prevision pour {} (modele={}, horizon={} mois)", commune, model_name, h)
-        fc = forecast_ensemble(agg, commune, horizon_months=h)
+        fc = forecast_fn(agg, commune, horizon_months=h)
         bt = backtest(agg, commune, test_months=min(h, 12))
         logger.info("  {} : MAE={:.0f}, MAPE={:.1f}%", commune, bt["mae"], bt["mape"])
         print(fc.tail(h).to_string(index=False))
