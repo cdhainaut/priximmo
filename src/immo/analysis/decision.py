@@ -92,7 +92,8 @@ def affordability_timeline(
     if sub.empty:
         return pd.DataFrame(
             columns=[
-                "date", "prix_m2", "rate", "monthly_payment_per_m2",
+                "date", "commune", "prix_m2", "rate", "taux_interet",
+                "monthly_payment_per_m2", "m2_achetables",
                 "purchasable_m2", "pct_change_vs_peak",
             ]
         )
@@ -126,9 +127,12 @@ def affordability_timeline(
 
     return pd.DataFrame({
         "date": dates,
+        "commune": commune,
         "prix_m2": prix,
         "rate": rates,
+        "taux_interet": rates * 100,
         "monthly_payment_per_m2": np.round(mp_per_m2, 2),
+        "m2_achetables": np.round(purchasable, 1),
         "purchasable_m2": np.round(purchasable, 1),
         "pct_change_vs_peak": np.round(pct_vs_peak, 2),
     })

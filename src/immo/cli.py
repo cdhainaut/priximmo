@@ -253,7 +253,7 @@ def forecast(
         raise typer.Exit(code=0)
 
     import pandas as pd
-    from immo.analysis.forecasting import forecast_ensemble, forecast_prophet, forecast_linear, backtest
+    from immo.analysis.forecasting import forecast_ensemble, forecast_prophet, forecast_linear, prepare_prophet_data, backtest
 
     metrics_path = cfg.output.metrics_csv
     if not metrics_path.exists():
@@ -263,16 +263,17 @@ def forecast(
     agg = pd.read_csv(metrics_path, parse_dates=["date_mutation"])
     label_col = cfg.grouping.group_by
 
-    if model_name == "prophet":
-        forecast_fn = forecast_prophet
-    elif model_name == "linear":
-        forecast_fn = forecast_linear
-    else:
-        forecast_fn = forecast_ensemble
-
     for commune in agg[label_col].unique():
         logger.info("Prevision pour {} (modele={}, horizon={} mois)", commune, model_name, h)
-        fc = forecast_fn(agg, commune, horizon_months=h)
+        if model_name == "prophet":
+            prophet_df = prepare_prophet_data(agg, commune)
+            fc = forecast_prophet(prophet_df, horizon_months=h)
+        elif model_name == "linear":
+            sub = agg[agg[label_col] == commune].sort_values("date_mutation")
+            series = sub.set_index("date_mutation")["prix_m2_median"].dropna()
+            fc = forecast_linear(series, horizon_months=h)
+        else:
+            fc = forecast_ensemble(agg, commune, horizon_months=h)
         bt = backtest(agg, commune, test_months=min(h, 12))
         logger.info("  {} : MAE={:.0f}, MAPE={:.1f}%", commune, bt["mae"], bt["mape"])
         print(fc.tail(h).to_string(index=False))

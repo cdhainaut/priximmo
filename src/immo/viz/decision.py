@@ -7,17 +7,15 @@ et ne sont pas de simples representations de donnees.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
-
 import matplotlib.colors as mcolors
-import matplotlib.dates as mdates
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
-import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib.figure import Figure
+
+from immo.analysis.decision import drawdown_from_peak
 
 from .market import _auto_interval, _euro_formatter, _format_date_axis, _pct_formatter, setup_style
 
@@ -45,13 +43,6 @@ def _compute_volume_zscore(agg: pd.DataFrame, label_col: str) -> pd.DataFrame:
     grp = df.groupby(label_col)["n_transactions"]
     df["vol_zscore"] = grp.transform(lambda s: (s - s.mean()) / s.std() if s.std() > 0 else 0.0)
     return df
-
-
-def _compute_drawdown(series: pd.Series) -> pd.Series:
-    """Calcule le drawdown (distance au pic) en pourcentage negatif."""
-    peak = series.expanding().max()
-    drawdown = (series - peak) / peak * 100
-    return drawdown
 
 
 # ---------------------------------------------------------------------------
@@ -195,10 +186,10 @@ def fig_affordability_evolution(
 
     m2 = sub["m2_achetables"]
     dates = sub["date"]
-    mean_m2 = m2.mean()
-    peak_m2 = m2.max()
-    current_m2 = m2.iloc[-1] if len(m2) > 0 else 0
-    pct_vs_peak = ((current_m2 - peak_m2) / peak_m2 * 100) if peak_m2 > 0 else 0
+    mean_m2 = float(m2.mean())
+    peak_m2 = float(m2.max())
+    current_m2 = float(m2.iloc[-1]) if len(m2) > 0 else 0.0
+    pct_vs_peak = ((current_m2 - peak_m2) / peak_m2 * 100) if peak_m2 > 0 else 0.0
 
     # Area fill: green above mean, red below
     ax1.fill_between(
@@ -286,7 +277,7 @@ def fig_drawdown(
     for idx, (label, sub) in enumerate(groups):
         sub = sub.sort_values("date_mutation")
         price_col = "prix_m2_smooth" if "prix_m2_smooth" in sub.columns else "prix_m2_median"
-        dd = _compute_drawdown(sub[price_col].dropna())
+        dd = drawdown_from_peak(sub[price_col].dropna())
         color = palette[idx % len(palette)]
 
         dates = sub.loc[dd.index, "date_mutation"]
@@ -666,7 +657,7 @@ def _draw_drawdown_on_ax(ax: plt.Axes, agg: pd.DataFrame, label_col: str) -> Non
     for idx, (label, sub) in enumerate(groups):
         sub = sub.sort_values("date_mutation")
         price_col = "prix_m2_smooth" if "prix_m2_smooth" in sub.columns else "prix_m2_median"
-        dd = _compute_drawdown(sub[price_col].dropna())
+        dd = drawdown_from_peak(sub[price_col].dropna())
         color = palette[idx % len(palette)]
         dates = sub.loc[dd.index, "date_mutation"]
         ax.plot(dates, dd, linewidth=1.2, label=label, color=color)

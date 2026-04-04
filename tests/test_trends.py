@@ -16,6 +16,7 @@ def test_monthly_aggregate(sample_transactions):
     assert len(agg) > 0
     # Should have entries for both communes
     assert set(agg["commune"].unique()) == {"Brest", "Lorient"}
+    assert (agg["prix_m2_median"] > 0).all()
 
 
 def test_add_derived_metrics(sample_transactions):

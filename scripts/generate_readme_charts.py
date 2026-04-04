@@ -289,11 +289,6 @@ if _HAS_DECISION:
     aff_parts = []
     for commune in communes:
         af = affordability_timeline(agg, commune=commune)
-        # Normalize column names for viz module
-        af = af.rename(columns={"purchasable_m2": "m2_achetables"})
-        if "rate" in af.columns:
-            af["taux_interet"] = af["rate"] * 100
-        af["commune"] = commune
         aff_parts.append(af)
     affordability_df = pd.concat(aff_parts, ignore_index=True)
 

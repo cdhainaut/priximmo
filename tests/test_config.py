@@ -29,7 +29,7 @@ def test_load_config_none():
     # Should find config/default.yml and return 3 communes,
     # or return pure defaults (0 communes) if file not found.
     # From the repo root it should find the file.
-    assert len(cfg.communes) >= 0
+    assert isinstance(cfg.communes, dict)
 
 
 def test_config_communes_have_required_fields():
