@@ -103,8 +103,10 @@ def add_derived_metrics(
         sub["anomaly_score"] = (s - sub["prix_m2_smooth"]) / iqr.replace(0, np.nan)
         return sub
 
-    out = out.groupby(label_col, group_keys=False).apply(_per_group)
-    return out.reset_index(drop=True)
+    parts = []
+    for _label, sub in out.groupby(label_col, sort=False):
+        parts.append(_per_group(sub))
+    return pd.concat(parts, ignore_index=True)
 
 
 # ---------------------------------------------------------------------------
