@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pandas as pd
-
 from immo.analysis.trends import add_derived_metrics, monthly_aggregate
 
 

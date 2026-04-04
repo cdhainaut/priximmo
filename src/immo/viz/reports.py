@@ -1,11 +1,12 @@
-# -*- coding: utf-8 -*-
 """Génération de rapports PDF multi-pages pour l'analyse immobilière."""
+
 from __future__ import annotations
 
 import datetime as dt
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional, Sequence
+from typing import Any
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -27,10 +28,10 @@ from .signals import (
     fig_signal_overlay,
 )
 
-
 # ---------------------------------------------------------------------------
 # Configuration du rapport
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class ReportConfig:
@@ -40,12 +41,13 @@ class ReportConfig:
     subtitle: str = ""
     author: str = ""
     date: str = field(default_factory=lambda: dt.date.today().strftime("%d/%m/%Y"))
-    logo_path: Optional[str] = None
+    logo_path: str | None = None
 
 
 # ---------------------------------------------------------------------------
 # Pages internes
 # ---------------------------------------------------------------------------
+
 
 def _fig_cover(config: ReportConfig) -> Figure:
     """Page de couverture avec titre, sous-titre, auteur et date."""
@@ -61,8 +63,8 @@ def _fig_cover(config: ReportConfig) -> Figure:
     # Logo optionnel
     if config.logo_path:
         try:
-            from matplotlib.offsetbox import AnnotationBbox, OffsetImage
             import matplotlib.image as mpimg
+            from matplotlib.offsetbox import AnnotationBbox, OffsetImage
 
             logo = mpimg.imread(config.logo_path)
             imagebox = OffsetImage(logo, zoom=0.3)
@@ -73,13 +75,20 @@ def _fig_cover(config: ReportConfig) -> Figure:
 
     # Textes
     ax.text(
-        0.06, 0.72, config.title,
-        fontsize=32, weight="bold", color="#1f3864",
+        0.06,
+        0.72,
+        config.title,
+        fontsize=32,
+        weight="bold",
+        color="#1f3864",
         verticalalignment="top",
     )
     ax.text(
-        0.06, 0.58, config.subtitle,
-        fontsize=18, color="#444444",
+        0.06,
+        0.58,
+        config.subtitle,
+        fontsize=18,
+        color="#444444",
         verticalalignment="top",
     )
 
@@ -88,19 +97,28 @@ def _fig_cover(config: ReportConfig) -> Figure:
 
     if config.author:
         ax.text(
-            0.06, 0.42, f"Auteur : {config.author}",
-            fontsize=12, color="#666666",
+            0.06,
+            0.42,
+            f"Auteur : {config.author}",
+            fontsize=12,
+            color="#666666",
         )
     ax.text(
-        0.06, 0.36, f"Date : {config.date}",
-        fontsize=12, color="#666666",
+        0.06,
+        0.36,
+        f"Date : {config.date}",
+        fontsize=12,
+        color="#666666",
     )
 
     # Pied de page
     ax.text(
-        0.06, 0.06,
+        0.06,
+        0.06,
         "Données DVF (Demandes de Valeurs Foncières) — data.gouv.fr",
-        fontsize=9, color="#999999", style="italic",
+        fontsize=9,
+        color="#999999",
+        style="italic",
     )
 
     return fig
@@ -115,15 +133,24 @@ def _fig_section_title(title: str, description: str = "") -> Figure:
 
     ax.axhspan(0.45, 0.55, color="#1f3864", alpha=0.08)
     ax.text(
-        0.5, 0.55, title,
-        fontsize=26, weight="bold", color="#1f3864",
-        ha="center", va="center",
+        0.5,
+        0.55,
+        title,
+        fontsize=26,
+        weight="bold",
+        color="#1f3864",
+        ha="center",
+        va="center",
     )
     if description:
         ax.text(
-            0.5, 0.42, description,
-            fontsize=14, color="#666666",
-            ha="center", va="center",
+            0.5,
+            0.42,
+            description,
+            fontsize=14,
+            color="#666666",
+            ha="center",
+            va="center",
         )
     return fig
 
@@ -131,6 +158,7 @@ def _fig_section_title(title: str, description: str = "") -> Figure:
 # ---------------------------------------------------------------------------
 # Helpers PDF
 # ---------------------------------------------------------------------------
+
 
 def _save_and_close(pdf: PdfPages, fig: Figure) -> None:
     """Sauvegarde une figure dans le PDF et la ferme."""
@@ -141,6 +169,7 @@ def _save_and_close(pdf: PdfPages, fig: Figure) -> None:
 # ---------------------------------------------------------------------------
 # generate_market_report
 # ---------------------------------------------------------------------------
+
 
 def generate_market_report(
     agg: Any,  # pd.DataFrame
@@ -192,6 +221,7 @@ def generate_market_report(
 # ---------------------------------------------------------------------------
 # generate_signal_report
 # ---------------------------------------------------------------------------
+
 
 def generate_signal_report(
     agg: Any,  # pd.DataFrame
@@ -249,6 +279,7 @@ def generate_signal_report(
 # ---------------------------------------------------------------------------
 # generate_full_report
 # ---------------------------------------------------------------------------
+
 
 def generate_full_report(
     agg: Any,  # pd.DataFrame

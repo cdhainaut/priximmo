@@ -12,8 +12,7 @@ import numpy as np
 import pandas as pd
 
 from .rates import borrowing_capacity, monthly_payment
-from .signals import composite_signal, SignalType
-
+from .signals import SignalType, composite_signal
 
 # ---------------------------------------------------------------------------
 # Default rate proxy
@@ -46,6 +45,7 @@ def _default_rate_series(dates: pd.DatetimeIndex) -> pd.Series:
 # ---------------------------------------------------------------------------
 # 1. Affordability timeline
 # ---------------------------------------------------------------------------
+
 
 def affordability_timeline(
     agg: pd.DataFrame,
@@ -84,17 +84,19 @@ def affordability_timeline(
         Columns: ``date``, ``prix_m2``, ``rate``, ``monthly_payment_per_m2``,
         ``purchasable_m2``, ``pct_change_vs_peak``.
     """
-    sub = (
-        agg.loc[agg[label_col] == commune]
-        .sort_values("date_mutation")
-        .copy()
-    )
+    sub = agg.loc[agg[label_col] == commune].sort_values("date_mutation").copy()
     if sub.empty:
         return pd.DataFrame(
             columns=[
-                "date", "commune", "prix_m2", "rate", "taux_interet",
-                "monthly_payment_per_m2", "m2_achetables",
-                "purchasable_m2", "pct_change_vs_peak",
+                "date",
+                "commune",
+                "prix_m2",
+                "rate",
+                "taux_interet",
+                "monthly_payment_per_m2",
+                "m2_achetables",
+                "purchasable_m2",
+                "pct_change_vs_peak",
             ]
         )
 
@@ -106,17 +108,15 @@ def affordability_timeline(
     else:
         rates = _default_rate_series(dates).values
 
-    capacities = np.array([
-        borrowing_capacity(salary, float(r), duration, debt_ratio, insurance)
-        for r in rates
-    ])
+    capacities = np.array(
+        [borrowing_capacity(salary, float(r), duration, debt_ratio, insurance) for r in rates]
+    )
     purchasable = np.where(prix > 0, capacities / prix, np.nan)
 
     # Monthly payment per m2 (what 1 m2 costs per month over the loan)
-    mp_per_m2 = np.array([
-        monthly_payment(float(p), float(r), duration, insurance)
-        for p, r in zip(prix, rates)
-    ])
+    mp_per_m2 = np.array(
+        [monthly_payment(float(p), float(r), duration, insurance) for p, r in zip(prix, rates)]
+    )
 
     peak_m2 = np.maximum.accumulate(np.nan_to_num(purchasable, nan=0.0))
     pct_vs_peak = np.where(
@@ -125,22 +125,25 @@ def affordability_timeline(
         np.nan,
     )
 
-    return pd.DataFrame({
-        "date": dates,
-        "commune": commune,
-        "prix_m2": prix,
-        "rate": rates,
-        "taux_interet": rates * 100,
-        "monthly_payment_per_m2": np.round(mp_per_m2, 2),
-        "m2_achetables": np.round(purchasable, 1),
-        "purchasable_m2": np.round(purchasable, 1),
-        "pct_change_vs_peak": np.round(pct_vs_peak, 2),
-    })
+    return pd.DataFrame(
+        {
+            "date": dates,
+            "commune": commune,
+            "prix_m2": prix,
+            "rate": rates,
+            "taux_interet": rates * 100,
+            "monthly_payment_per_m2": np.round(mp_per_m2, 2),
+            "m2_achetables": np.round(purchasable, 1),
+            "purchasable_m2": np.round(purchasable, 1),
+            "pct_change_vs_peak": np.round(pct_vs_peak, 2),
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # 2. Drawdown from peak
 # ---------------------------------------------------------------------------
+
 
 def drawdown_from_peak(series: pd.Series) -> pd.Series:
     """Compute drawdown: (current - running_max) / running_max * 100.
@@ -163,6 +166,7 @@ def drawdown_from_peak(series: pd.Series) -> pd.Series:
 # ---------------------------------------------------------------------------
 # 3. Market phase classification
 # ---------------------------------------------------------------------------
+
 
 def market_phase(prix_momentum_3m: float, volume_zscore: float) -> str:
     """Classify the market into one of four regimes.
@@ -202,6 +206,7 @@ def market_phase(prix_momentum_3m: float, volume_zscore: float) -> str:
 # ---------------------------------------------------------------------------
 # 4. Market phase history
 # ---------------------------------------------------------------------------
+
 
 def market_phase_history(
     agg: pd.DataFrame,
@@ -260,6 +265,7 @@ def market_phase_history(
 # 5. Price-volume divergence
 # ---------------------------------------------------------------------------
 
+
 def price_volume_divergence(
     price_series: pd.Series,
     volume_series: pd.Series,
@@ -300,6 +306,7 @@ def price_volume_divergence(
 # ---------------------------------------------------------------------------
 # 6. Rate-adjusted price
 # ---------------------------------------------------------------------------
+
 
 def rate_adjusted_price(
     prix_m2_series: pd.Series,
@@ -422,9 +429,7 @@ def commune_scorecard(
 
         # Year-over-year percent change
         if len(price) >= 13:
-            yoy_pct = float(
-                (price.iloc[-1] - price.iloc[-13]) / price.iloc[-13] * 100
-            )
+            yoy_pct = float((price.iloc[-1] - price.iloc[-13]) / price.iloc[-13] * 100)
         else:
             yoy_pct = np.nan
 
@@ -446,9 +451,12 @@ def commune_scorecard(
 
         # Affordability
         aff = affordability_timeline(
-            agg, str(commune_name),
-            salary=salary, duration=duration,
-            insurance=insurance, debt_ratio=debt_ratio,
+            agg,
+            str(commune_name),
+            salary=salary,
+            duration=duration,
+            insurance=insurance,
+            debt_ratio=debt_ratio,
             label_col=label_col,
         )
         if not aff.empty:
@@ -476,7 +484,9 @@ def commune_scorecard(
 
         # 3. Affordability trend: negative pct_change_vs_peak = worse
         #    Map [-40, 0] -> [0, 100]
-        aff_sc = float(np.clip((40 + (aff_vs_peak if not np.isnan(aff_vs_peak) else 0)) * (100 / 40), 0, 100))
+        aff_sc = float(
+            np.clip((40 + (aff_vs_peak if not np.isnan(aff_vs_peak) else 0)) * (100 / 40), 0, 100)
+        )
 
         # 4. Signal score: STRONG_BUY=100, BUY=80, HOLD=50, SELL=20, STRONG_SELL=0
         signal_scores = {
@@ -486,9 +496,7 @@ def commune_scorecard(
             SignalType.SELL: 20,
             SignalType.STRONG_SELL: 0,
         }
-        sig_sc = signal_scores.get(
-            sig.signal_type if sig else SignalType.HOLD, 50
-        )
+        sig_sc = signal_scores.get(sig.signal_type if sig else SignalType.HOLD, 50)
 
         # 5. Volatility score: lower vol = more attractive
         #    Map [0, 10] -> [100, 0]
@@ -496,27 +504,25 @@ def commune_scorecard(
         vol_sc = float(np.clip((10 - vol_val) * 10, 0, 100))
 
         # Weighted composite
-        score = (
-            0.25 * phase_sc
-            + 0.20 * dd_sc
-            + 0.20 * aff_sc
-            + 0.20 * sig_sc
-            + 0.15 * vol_sc
-        )
+        score = 0.25 * phase_sc + 0.20 * dd_sc + 0.20 * aff_sc + 0.20 * sig_sc + 0.15 * vol_sc
 
-        rows.append({
-            "commune": commune_name,
-            "current_price": round(current_price, 0),
-            "yoy_pct": round(yoy_pct, 1) if not np.isnan(yoy_pct) else np.nan,
-            "drawdown_from_peak": round(current_dd, 1),
-            "phase": latest_phase,
-            "signal": signal_str,
-            "confidence": round(confidence, 2),
-            "affordability_m2": round(current_m2, 1) if not np.isnan(current_m2) else np.nan,
-            "affordability_vs_peak_pct": round(aff_vs_peak, 1) if not np.isnan(aff_vs_peak) else np.nan,
-            "volatility": round(volatility, 2) if not np.isnan(volatility) else np.nan,
-            "score": round(score, 0),
-        })
+        rows.append(
+            {
+                "commune": commune_name,
+                "current_price": round(current_price, 0),
+                "yoy_pct": round(yoy_pct, 1) if not np.isnan(yoy_pct) else np.nan,
+                "drawdown_from_peak": round(current_dd, 1),
+                "phase": latest_phase,
+                "signal": signal_str,
+                "confidence": round(confidence, 2),
+                "affordability_m2": round(current_m2, 1) if not np.isnan(current_m2) else np.nan,
+                "affordability_vs_peak_pct": round(aff_vs_peak, 1)
+                if not np.isnan(aff_vs_peak)
+                else np.nan,
+                "volatility": round(volatility, 2) if not np.isnan(volatility) else np.nan,
+                "score": round(score, 0),
+            }
+        )
 
     df = pd.DataFrame(rows)
     if not df.empty:
@@ -527,6 +533,7 @@ def commune_scorecard(
 # ---------------------------------------------------------------------------
 # 8. Decision summary
 # ---------------------------------------------------------------------------
+
 
 def decision_summary(
     agg: pd.DataFrame,
@@ -562,11 +569,11 @@ def decision_summary(
 
     lines: list[str] = []
     for _, row in sc.iterrows():
-        dd_str = f"{row['drawdown_from_peak']:+.0f}%" if pd.notna(row["drawdown_from_peak"]) else "N/A"
+        dd_str = (
+            f"{row['drawdown_from_peak']:+.0f}%" if pd.notna(row["drawdown_from_peak"]) else "N/A"
+        )
         aff_str = (
-            f"{row['affordability_m2']:.0f} m2"
-            if pd.notna(row["affordability_m2"])
-            else "N/A"
+            f"{row['affordability_m2']:.0f} m2" if pd.notna(row["affordability_m2"]) else "N/A"
         )
         aff_peak_str = (
             f"{row['affordability_vs_peak_pct']:+.0f}% vs pic"

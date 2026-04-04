@@ -1,5 +1,7 @@
 """Estimateur de coûts de rénovation pour maisons en pierre."""
 
+from .charts import generate_all_charts
+from .estimator import compute_estimate, format_totals, print_breakdown
 from .models import (
     Dimensions,
     ElectricConfig,
@@ -11,8 +13,6 @@ from .models import (
     ProjectConfig,
     SurfacesUnitCosts,
 )
-from .estimator import compute_estimate, print_breakdown, format_totals
-from .charts import generate_all_charts
 
 __all__ = [
     "Dimensions",

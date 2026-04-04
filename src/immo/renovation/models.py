@@ -7,10 +7,9 @@ Les surfaces sont en m², les longueurs en m.
 
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
-
 
 # ---------------------------------------------------------------------------
 # Dimensions du bâtiment
@@ -23,7 +22,7 @@ class Dimensions(BaseModel):
     longueur_m: float = Field(..., gt=0, description="Longueur du bâtiment en mètres")
     largeur_m: float = Field(..., gt=0, description="Largeur du bâtiment en mètres")
     hauteur_m: float = Field(..., gt=0, description="Hauteur sous plafond en mètres")
-    surface_habitable_m2: Optional[float] = Field(
+    surface_habitable_m2: float | None = Field(
         default=None, gt=0, description="Surface habitable réelle (prioritaire si renseignée)"
     )
 
@@ -119,7 +118,7 @@ class PlumbingConfig(BaseModel):
 class HeatingConfig(BaseModel):
     """Configuration du lot chauffage (PAC air/air + poêle optionnel)."""
 
-    split_count: Optional[int] = Field(default=None, ge=0, description="Auto si None: 1 split ~ 45 m²")
+    split_count: int | None = Field(default=None, ge=0, description="Auto si None: 1 split ~ 45 m²")
     split_materials: float = Field(default=2000.0, ge=0)
     split_labor: float = Field(default=800.0, ge=0)
     # Groupe extérieur
@@ -183,7 +182,9 @@ class SurfacesUnitCosts(BaseModel):
     isol_murs_mo_perspirant: float = Field(default=28.0, ge=0)
     # Toujours pertinent
     isol_plaf_mat: float = Field(default=45.0, ge=0, description="Prix réel constaté")
-    isol_plaf_mo: float = Field(default=65.0, ge=0, description="MO par défaut (écrasé si modèle horaire actif)")
+    isol_plaf_mo: float = Field(
+        default=65.0, ge=0, description="MO par défaut (écrasé si modèle horaire actif)"
+    )
     placo_mat: float = Field(default=25.0, ge=0, description="Consommables inclus")
     placo_mo: float = Field(default=30.0, ge=0)
     peinture_mat: float = Field(default=2.5, ge=0)
@@ -213,9 +214,13 @@ class HourlyModelConfig(BaseModel):
     rate_plombier: float = Field(default=65.0, gt=0)
     rate_frigoriste: float = Field(default=75.0, gt=0)
     # Productivités
-    rampants_m2_per_hour: float = Field(default=5.0, gt=0, description="Productivité équipe / heure")
+    rampants_m2_per_hour: float = Field(
+        default=5.0, gt=0, description="Productivité équipe / heure"
+    )
     rampants_team_size: int = Field(default=2, gt=0)
-    cloisons_m2_per_hour: float = Field(default=2.0, gt=0, description="Par personne, joints inclus en moyenne")
+    cloisons_m2_per_hour: float = Field(
+        default=2.0, gt=0, description="Par personne, joints inclus en moyenne"
+    )
     cloisons_team_size: int = Field(default=2, gt=0)
     sols_stratif_m2_per_hour: float = Field(default=3.0, gt=0)
     sols_carrelage_m2_per_hour: float = Field(default=2.0, gt=0)
@@ -258,9 +263,9 @@ class ProjectConfig(BaseModel):
     sdb_surface_m2: float = Field(default=6.0, ge=0)
     sdb2_surface_m2: float = Field(default=0.0, ge=0)
     cuisine_surface_m2: float = Field(default=10.0, ge=0)
-    sols_secs_surface_m2: Optional[float] = Field(default=None, ge=0)
+    sols_secs_surface_m2: float | None = Field(default=None, ge=0)
     traiter_plafonds: bool = True
-    cloisons_surface_m2: Optional[float] = Field(default=None, ge=0)
+    cloisons_surface_m2: float | None = Field(default=None, ge=0)
     # Spécifique pierre
     include_wall_insulation: bool = False
     wall_insulation_mode: Literal["perspirant", "standard"] = "perspirant"
@@ -268,7 +273,7 @@ class ProjectConfig(BaseModel):
     contingency_pct: float = Field(default=0.10, ge=0, le=1.0)
 
     @model_validator(mode="after")
-    def _validate_surfaces(self) -> "ProjectConfig":
+    def _validate_surfaces(self) -> ProjectConfig:
         """Vérifie la cohérence des surfaces du programme."""
         floor = self.dims.floor_area
         sdb_total = self.sdb_surface_m2 + self.sdb2_surface_m2

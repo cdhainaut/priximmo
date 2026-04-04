@@ -11,10 +11,10 @@ from typing import Literal
 import yaml
 from pydantic import BaseModel, Field, model_validator
 
-
 # ---------------------------------------------------------------------------
 # Sub-models
 # ---------------------------------------------------------------------------
+
 
 class CommuneSource(BaseModel):
     """A single commune data source, identified by name, department, and INSEE code."""
@@ -105,6 +105,7 @@ class ForecastConfig(BaseModel):
 # Root model
 # ---------------------------------------------------------------------------
 
+
 class AppConfig(BaseModel):
     """Configuration racine de l'application immo."""
 
@@ -130,7 +131,7 @@ class AppConfig(BaseModel):
     # Back-fill commune names from dict keys
     # ------------------------------------------------------------------
     @model_validator(mode="after")
-    def _fill_commune_names(self) -> "AppConfig":
+    def _fill_commune_names(self) -> AppConfig:
         for key, commune in self.communes.items():
             if not commune.name:
                 commune.name = key
@@ -141,7 +142,7 @@ class AppConfig(BaseModel):
     # from the flat YAML format used in config.yml
     # ------------------------------------------------------------------
     @classmethod
-    def from_raw(cls, data: dict) -> "AppConfig":
+    def from_raw(cls, data: dict) -> AppConfig:
         """Build an AppConfig from a raw YAML dict, handling legacy flat keys."""
         # Move flat grouping keys into a nested dict if needed
         grouping = data.get("grouping", {})

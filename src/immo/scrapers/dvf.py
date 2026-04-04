@@ -41,6 +41,7 @@ _TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 # URL helpers
 # ---------------------------------------------------------------------------
 
+
 def list_available_years(url_root: str = DEFAULT_URL_ROOT) -> list[str]:
     """Scrape year directory URLs from the DVF file listing page.
 
@@ -71,17 +72,20 @@ def build_commune_url(year_url: str, department: int, insee_code: int) -> str:
     Example result:
         ``https://…/csv/2023/communes/29/29019.csv``
     """
-    return "/".join([
-        year_url.rstrip("/"),
-        "communes",
-        str(department),
-        f"{insee_code}.csv",
-    ])
+    return "/".join(
+        [
+            year_url.rstrip("/"),
+            "communes",
+            str(department),
+            f"{insee_code}.csv",
+        ]
+    )
 
 
 # ---------------------------------------------------------------------------
 # Single commune fetch
 # ---------------------------------------------------------------------------
+
 
 @retry(
     retry=retry_if_exception_type((httpx.HTTPStatusError, httpx.TransportError)),
@@ -167,7 +171,9 @@ def fetch_commune_year(
 
     # Parse dates
     df["date_mutation"] = pd.to_datetime(
-        df["date_mutation"], errors="coerce", utc=True,
+        df["date_mutation"],
+        errors="coerce",
+        utc=True,
     ).dt.tz_localize(None)
 
     # Drop rows missing critical values
@@ -182,7 +188,9 @@ def fetch_commune_year(
 
     logger.debug(
         "  -> {} rows after filtering (commune {}, year {})",
-        len(df), insee_code, year_label,
+        len(df),
+        insee_code,
+        year_label,
     )
     return df
 
@@ -190,6 +198,7 @@ def fetch_commune_year(
 # ---------------------------------------------------------------------------
 # Multi-commune / multi-year fetch
 # ---------------------------------------------------------------------------
+
 
 def fetch_all_communes(
     communes: dict[str, dict],
@@ -232,7 +241,10 @@ def fetch_all_communes(
 
     logger.info(
         "Scheduling {} download tasks ({} communes x {} years) with {} workers",
-        len(tasks), len(communes), len(years), max_workers,
+        len(tasks),
+        len(communes),
+        len(years),
+        max_workers,
     )
 
     frames: list[pd.DataFrame] = []
@@ -261,7 +273,8 @@ def fetch_all_communes(
     combined = pd.concat(frames, ignore_index=True)
     logger.info(
         "Downloaded {} total rows for {} communes",
-        len(combined), len(communes),
+        len(combined),
+        len(communes),
     )
     return combined
 
@@ -269,6 +282,7 @@ def fetch_all_communes(
 # ---------------------------------------------------------------------------
 # Parquet caching
 # ---------------------------------------------------------------------------
+
 
 def cache_to_parquet(df: pd.DataFrame, path: Path) -> None:
     """Save a DataFrame to a Parquet file for local caching.

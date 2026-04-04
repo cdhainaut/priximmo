@@ -7,17 +7,17 @@ per commune and date.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Sequence
 
 import numpy as np
 import pandas as pd
 
-
 # ---------------------------------------------------------------------------
 # Types
 # ---------------------------------------------------------------------------
+
 
 class SignalType(Enum):
     """Market signal classification."""
@@ -46,6 +46,7 @@ class Signal:
 # ---------------------------------------------------------------------------
 # Individual signal generators
 # ---------------------------------------------------------------------------
+
 
 def z_score_signal(series: pd.Series, window: int = 24) -> pd.Series:
     """Z-score of current price vs its rolling mean.
@@ -318,7 +319,7 @@ def composite_signal(
             components["volume"] = volume_signal(volume)
 
         # -- rate_adjusted
-        if has_rates and "rate_adjusted" in w:
+        if has_rates and "rate_adjusted" in w and rate_history is not None:
             rate_df = rate_history.set_index("date_mutation")["rate"].sort_index()
             # Align rates to the commune index
             rate_aligned = rate_df.reindex(sub.index, method="ffill")
@@ -363,6 +364,7 @@ def composite_signal(
 # ---------------------------------------------------------------------------
 # Summary table
 # ---------------------------------------------------------------------------
+
 
 def signal_summary(signals: Sequence[Signal]) -> pd.DataFrame:
     """Create a summary DataFrame of the latest signals per commune.

@@ -26,14 +26,14 @@ _BDF_DATASET = "taux-dinterets-des-nouvelles-operations"
 
 # ECB Data Portal -- MFI interest rates, housing loans, new business, France
 _ECB_API_URL = (
-    "https://data-api.ecb.europa.eu/service/data/MIR/"
-    "M.FR.B.A2C.AM.R.A.2250.EUR.N?format=csvdata"
+    "https://data-api.ecb.europa.eu/service/data/MIR/M.FR.B.A2C.AM.R.A.2250.EUR.N?format=csvdata"
 )
 
 
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
 
 @retry(
     retry=retry_if_exception_type((httpx.HTTPStatusError, httpx.TransportError)),
@@ -65,6 +65,7 @@ def _get_csv_text(url: str) -> str:
 # Banque de France
 # ---------------------------------------------------------------------------
 
+
 def fetch_banque_de_france_rates() -> pd.DataFrame:
     """Fetch historical French mortgage rates from Banque de France open data.
 
@@ -94,11 +95,13 @@ def fetch_banque_de_france_rates() -> pd.DataFrame:
             period = rec.get("date") or rec.get("period")
             value = rec.get("taux") or rec.get("value") or rec.get("obs_value")
             if period is not None and value is not None:
-                rows.append({
-                    "date": pd.Period(str(period)[:7], freq="M"),
-                    "rate_pct": float(value),
-                    "duration_years": 20,  # default duration for BdF housing-loan series
-                })
+                rows.append(
+                    {
+                        "date": pd.Period(str(period)[:7], freq="M"),
+                        "rate_pct": float(value),
+                        "duration_years": 20,  # default duration for BdF housing-loan series
+                    }
+                )
 
         if rows:
             df = pd.DataFrame(rows).sort_values("date").reset_index(drop=True)
@@ -108,7 +111,8 @@ def fetch_banque_de_france_rates() -> pd.DataFrame:
 
     except Exception as exc:
         logger.warning(
-            "BdF API unavailable ({}), using fallback manual rates", exc,
+            "BdF API unavailable ({}), using fallback manual rates",
+            exc,
         )
         return _fallback_manual_rates()
 
@@ -119,16 +123,33 @@ def _fallback_manual_rates() -> pd.DataFrame:
     Sources: Banque de France bulletins, Observatoire Credit Logement / CSA.
     """
     data = [
-        ("2015-01", 2.20), ("2015-06", 1.99), ("2015-12", 2.14),
-        ("2016-06", 1.56), ("2016-12", 1.34),
-        ("2017-06", 1.56), ("2017-12", 1.51),
-        ("2018-06", 1.49), ("2018-12", 1.44),
-        ("2019-06", 1.29), ("2019-12", 1.12),
-        ("2020-06", 1.24), ("2020-12", 1.17),
-        ("2021-06", 1.06), ("2021-12", 1.06),
-        ("2022-03", 1.12), ("2022-06", 1.49), ("2022-09", 1.88), ("2022-12", 2.34),
-        ("2023-03", 2.84), ("2023-06", 3.28), ("2023-09", 3.77), ("2023-12", 4.20),
-        ("2024-03", 3.90), ("2024-06", 3.65), ("2024-09", 3.54), ("2024-12", 3.35),
+        ("2015-01", 2.20),
+        ("2015-06", 1.99),
+        ("2015-12", 2.14),
+        ("2016-06", 1.56),
+        ("2016-12", 1.34),
+        ("2017-06", 1.56),
+        ("2017-12", 1.51),
+        ("2018-06", 1.49),
+        ("2018-12", 1.44),
+        ("2019-06", 1.29),
+        ("2019-12", 1.12),
+        ("2020-06", 1.24),
+        ("2020-12", 1.17),
+        ("2021-06", 1.06),
+        ("2021-12", 1.06),
+        ("2022-03", 1.12),
+        ("2022-06", 1.49),
+        ("2022-09", 1.88),
+        ("2022-12", 2.34),
+        ("2023-03", 2.84),
+        ("2023-06", 3.28),
+        ("2023-09", 3.77),
+        ("2023-12", 4.20),
+        ("2024-03", 3.90),
+        ("2024-06", 3.65),
+        ("2024-09", 3.54),
+        ("2024-12", 3.35),
         ("2025-03", 3.20),
     ]
     df = pd.DataFrame(data, columns=["date", "rate_pct"])
@@ -140,6 +161,7 @@ def _fallback_manual_rates() -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # ECB key rates
 # ---------------------------------------------------------------------------
+
 
 def get_ecb_rates() -> pd.DataFrame:
     """Fetch ECB MFI interest-rate statistics for French housing loans.
@@ -156,6 +178,7 @@ def get_ecb_rates() -> pd.DataFrame:
 
     try:
         import io
+
         csv_text = _get_csv_text(_ECB_API_URL)
         df = pd.read_csv(io.StringIO(csv_text))
 
@@ -163,11 +186,13 @@ def get_ecb_rates() -> pd.DataFrame:
         period_col = "TIME_PERIOD" if "TIME_PERIOD" in df.columns else df.columns[0]
         value_col = "OBS_VALUE" if "OBS_VALUE" in df.columns else df.columns[-1]
 
-        result = pd.DataFrame({
-            "date": df[period_col].apply(lambda d: pd.Period(str(d)[:7], freq="M")),
-            "rate_pct": pd.to_numeric(df[value_col], errors="coerce"),
-            "source": "ECB_MIR",
-        }).dropna(subset=["rate_pct"])
+        result = pd.DataFrame(
+            {
+                "date": df[period_col].apply(lambda d: pd.Period(str(d)[:7], freq="M")),
+                "rate_pct": pd.to_numeric(df[value_col], errors="coerce"),
+                "source": "ECB_MIR",
+            }
+        ).dropna(subset=["rate_pct"])
 
         logger.info("Retrieved {} ECB rate observations", len(result))
         return result.sort_values("date").reset_index(drop=True)
@@ -180,11 +205,21 @@ def get_ecb_rates() -> pd.DataFrame:
 def _fallback_ecb_refi() -> pd.DataFrame:
     """ECB main refinancing operations rate (key policy rate) -- curated."""
     data = [
-        ("2015-01", 0.05), ("2016-03", 0.00), ("2022-07", 0.50),
-        ("2022-09", 1.25), ("2022-11", 2.00), ("2023-02", 2.50),
-        ("2023-03", 3.00), ("2023-05", 3.25), ("2023-06", 3.50),
-        ("2023-07", 3.75), ("2023-09", 4.00), ("2023-10", 4.50),
-        ("2024-06", 4.25), ("2024-09", 3.65), ("2024-10", 3.40),
+        ("2015-01", 0.05),
+        ("2016-03", 0.00),
+        ("2022-07", 0.50),
+        ("2022-09", 1.25),
+        ("2022-11", 2.00),
+        ("2023-02", 2.50),
+        ("2023-03", 3.00),
+        ("2023-05", 3.25),
+        ("2023-06", 3.50),
+        ("2023-07", 3.75),
+        ("2023-09", 4.00),
+        ("2023-10", 4.50),
+        ("2024-06", 4.25),
+        ("2024-09", 3.65),
+        ("2024-10", 3.40),
         ("2025-01", 2.90),
     ]
     df = pd.DataFrame(data, columns=["date", "rate_pct"])
@@ -196,6 +231,7 @@ def _fallback_ecb_refi() -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # Combined / manual rate builder
 # ---------------------------------------------------------------------------
+
 
 def build_rate_history(
     manual_rates: list[dict] | None = None,
@@ -240,8 +276,7 @@ def build_rate_history(
 
     # Manual entries take precedence: keep last occurrence per date
     combined = (
-        combined
-        .sort_values(["date", "source"])
+        combined.sort_values(["date", "source"])
         .drop_duplicates(subset=["date"], keep="last")
         .sort_values("date")
         .reset_index(drop=True)
@@ -254,6 +289,7 @@ def build_rate_history(
 # ---------------------------------------------------------------------------
 # Current rate helper
 # ---------------------------------------------------------------------------
+
 
 def current_market_rate(duration_years: int = 25) -> float:
     """Return the latest available mortgage rate estimate.
@@ -286,6 +322,10 @@ def current_market_rate(duration_years: int = 25) -> float:
 
     logger.info(
         "Current rate estimate: {:.2f}% for {}y (base {:.2f}% at ~{}y + {:.2f}pp adjustment)",
-        adjusted, duration_years, base_rate, reference_duration, adjustment,
+        adjusted,
+        duration_years,
+        base_rate,
+        reference_duration,
+        adjustment,
     )
     return adjusted

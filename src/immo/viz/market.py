@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Visualisations du marché immobilier — prix, volumes, tendances."""
+
 from __future__ import annotations
 
 import matplotlib.dates as mdates
@@ -38,6 +38,7 @@ _MONTHS_FR = [
 # Style global
 # ---------------------------------------------------------------------------
 
+
 def setup_style() -> None:
     """Configure le style seaborn/matplotlib pour tous les graphiques."""
     sns.set_context("paper", font_scale=1.1)
@@ -71,6 +72,7 @@ def setup_style() -> None:
 # Helpers internes
 # ---------------------------------------------------------------------------
 
+
 def _format_date_axis(ax: plt.Axes, interval: int = 3) -> None:
     """Formate l'axe X en dates mensuelles."""
     ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval))
@@ -90,9 +92,7 @@ def _pct_formatter(x: float, _pos: int | None = None) -> str:
 
 def _auto_interval(agg: pd.DataFrame) -> int:
     """Calcule un intervalle de ticks raisonnable selon l'étendue temporelle."""
-    span_months = (
-        (agg["date_mutation"].max() - agg["date_mutation"].min()).days / 30.0
-    )
+    span_months = (agg["date_mutation"].max() - agg["date_mutation"].min()).days / 30.0
     if span_months > 60:
         return 6
     if span_months > 24:
@@ -103,6 +103,7 @@ def _auto_interval(agg: pd.DataFrame) -> int:
 # ---------------------------------------------------------------------------
 # fig_trend_iqr
 # ---------------------------------------------------------------------------
+
 
 def fig_trend_iqr(
     agg: pd.DataFrame,
@@ -160,6 +161,7 @@ def fig_trend_iqr(
 # fig_volume
 # ---------------------------------------------------------------------------
 
+
 def fig_volume(
     agg: pd.DataFrame,
     label_col: str = "commune",
@@ -208,6 +210,7 @@ def fig_volume(
 # fig_yoy
 # ---------------------------------------------------------------------------
 
+
 def fig_yoy(
     agg: pd.DataFrame,
     label_col: str = "commune",
@@ -250,6 +253,7 @@ def fig_yoy(
 # ---------------------------------------------------------------------------
 # fig_volatility
 # ---------------------------------------------------------------------------
+
 
 def fig_volatility(
     agg: pd.DataFrame,
@@ -295,6 +299,7 @@ def fig_volatility(
 # fig_price_comparison
 # ---------------------------------------------------------------------------
 
+
 def fig_price_comparison(
     agg: pd.DataFrame,
     label_col: str = "commune",
@@ -338,6 +343,7 @@ def fig_price_comparison(
 # fig_heatmap_monthly
 # ---------------------------------------------------------------------------
 
+
 def fig_heatmap_monthly(
     agg: pd.DataFrame,
     commune: str,
@@ -377,6 +383,7 @@ def fig_heatmap_monthly(
 # fig_summary_table
 # ---------------------------------------------------------------------------
 
+
 def fig_summary_table(
     agg: pd.DataFrame,
     label_col: str = "commune",
@@ -385,9 +392,7 @@ def fig_summary_table(
     setup_style()
 
     # Dernier mois par label
-    last_idx = (
-        agg.groupby(label_col)["date_mutation"].transform("max") == agg["date_mutation"]
-    )
+    last_idx = agg.groupby(label_col)["date_mutation"].transform("max") == agg["date_mutation"]
     last = agg[last_idx].copy().sort_values(label_col)
 
     display_cols = [
@@ -491,6 +496,7 @@ def fig_summary_table(
 # fig_purchasing_power
 # ---------------------------------------------------------------------------
 
+
 def fig_purchasing_power(
     prix_m2: pd.Series,
     rates: pd.Series,
@@ -568,9 +574,12 @@ def fig_purchasing_power(
             ",", "\u202f"
         )
     )
-    _format_date_axis(ax1, interval=_auto_interval(
-        pd.DataFrame({"date_mutation": common_idx})
-    ) if len(common_idx) > 2 else 3)
+    _format_date_axis(
+        ax1,
+        interval=_auto_interval(pd.DataFrame({"date_mutation": common_idx}))
+        if len(common_idx) > 2
+        else 3,
+    )
 
     # Légendes combinées
     lines1, labels1 = ax1.get_legend_handles_labels()

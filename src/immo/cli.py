@@ -6,7 +6,7 @@ Usage:  immo --help
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from loguru import logger
@@ -29,7 +29,7 @@ app = typer.Typer(
 # ---------------------------------------------------------------------------
 
 ConfigOpt = Annotated[
-    Optional[Path],
+    Path | None,
     typer.Option("--config", "-c", help="Chemin vers le fichier de configuration YAML."),
 ]
 
@@ -45,11 +45,12 @@ def _load(config_path: Path | None) -> AppConfig:
 # immo fetch
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def fetch(
     config: ConfigOpt = None,
     output: Annotated[
-        Optional[Path],
+        Path | None,
         typer.Option("--output", "-o", help="Repertoire de sortie (parquet)."),
     ] = None,
 ) -> None:
@@ -85,6 +86,7 @@ def fetch(
 # immo analyze
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def analyze(
     config: ConfigOpt = None,
@@ -96,8 +98,8 @@ def analyze(
         logger.error("Aucune commune configuree. Verifiez votre fichier de configuration.")
         raise typer.Exit(code=1)
 
-    from immo.analysis.trends import add_derived_metrics, add_overall_series, monthly_aggregate
     from immo.analysis.signals import composite_signal, signal_summary
+    from immo.analysis.trends import add_derived_metrics, add_overall_series, monthly_aggregate
     from immo.scrapers.dvf import fetch_all_communes, load_from_parquet
 
     # Load data (cached or fresh)
@@ -122,14 +124,16 @@ def analyze(
     label_col = cfg.grouping.group_by
     agg = monthly_aggregate(df, label_col=label_col)
     agg = add_derived_metrics(
-        agg, label_col=label_col,
+        agg,
+        label_col=label_col,
         smoothing_kind=cfg.smoothing.kind,
         window=cfg.smoothing.window_months,
     )
     if cfg.grouping.include_overall:
         agg = add_overall_series(agg, label_col=label_col)
         agg = add_derived_metrics(
-            agg, label_col=label_col,
+            agg,
+            label_col=label_col,
             smoothing_kind=cfg.smoothing.kind,
             window=cfg.smoothing.window_months,
         )
@@ -150,19 +154,20 @@ def analyze(
 # immo report
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def report(
     config: ConfigOpt = None,
     output: Annotated[
-        Optional[Path],
+        Path | None,
         typer.Option("--output", "-o", help="Chemin du rapport PDF genere."),
     ] = None,
 ) -> None:
     """Generer un rapport PDF avec tous les graphiques."""
     import datetime as dt
 
-    from immo.viz.reports import ReportConfig, generate_full_report
     from immo.analysis.signals import composite_signal
+    from immo.viz.reports import ReportConfig, generate_full_report
 
     cfg = _load(config)
 
@@ -171,9 +176,12 @@ def report(
 
     # Load aggregated data
     import pandas as pd
+
     metrics_path = cfg.output.metrics_csv
     if not metrics_path.exists():
-        logger.error("Fichier de metriques introuvable: {}. Lancez 'immo analyze' d'abord.", metrics_path)
+        logger.error(
+            "Fichier de metriques introuvable: {}. Lancez 'immo analyze' d'abord.", metrics_path
+        )
         raise typer.Exit(code=1)
 
     agg = pd.read_csv(metrics_path, parse_dates=["date_mutation"])
@@ -196,11 +204,12 @@ def report(
 # immo rates
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def rates(
     config: ConfigOpt = None,
     rate: Annotated[
-        Optional[list[float]],
+        list[float] | None,
         typer.Option("--rate", "-r", help="Taux d'interet a tester (repetable)."),
     ] = None,
 ) -> None:
@@ -234,11 +243,12 @@ def rates(
 # immo forecast
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def forecast(
     config: ConfigOpt = None,
     horizon: Annotated[
-        Optional[int],
+        int | None,
         typer.Option("--horizon", "-H", help="Horizon de prevision en mois."),
     ] = None,
 ) -> None:
@@ -253,11 +263,20 @@ def forecast(
         raise typer.Exit(code=0)
 
     import pandas as pd
-    from immo.analysis.forecasting import forecast_ensemble, forecast_prophet, forecast_linear, prepare_prophet_data, backtest
+
+    from immo.analysis.forecasting import (
+        backtest,
+        forecast_ensemble,
+        forecast_linear,
+        forecast_prophet,
+        prepare_prophet_data,
+    )
 
     metrics_path = cfg.output.metrics_csv
     if not metrics_path.exists():
-        logger.error("Fichier de metriques introuvable: {}. Lancez 'immo analyze' d'abord.", metrics_path)
+        logger.error(
+            "Fichier de metriques introuvable: {}. Lancez 'immo analyze' d'abord.", metrics_path
+        )
         raise typer.Exit(code=1)
 
     agg = pd.read_csv(metrics_path, parse_dates=["date_mutation"])
@@ -283,6 +302,7 @@ def forecast(
 # immo renovation
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def renovation(
     config: ConfigOpt = None,
@@ -291,14 +311,18 @@ def renovation(
         typer.Option("--surface", "-s", help="Surface du bien a renover (m2)."),
     ] = 80.0,
     output: Annotated[
-        Optional[Path],
+        Path | None,
         typer.Option("--output", "-o", help="Chemin du fichier de sortie (CSV)."),
     ] = None,
 ) -> None:
     """Estimer les couts de renovation pour un bien."""
     from immo.renovation import (
-        Dimensions, ProjectConfig, compute_estimate,
-        print_breakdown, format_totals, generate_all_charts,
+        Dimensions,
+        ProjectConfig,
+        compute_estimate,
+        format_totals,
+        generate_all_charts,
+        print_breakdown,
     )
 
     out_path = Path(output) if output else Path("outputs/renovation_estimate.csv")
@@ -330,6 +354,7 @@ def renovation(
 # immo dashboard
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def dashboard(
     config: ConfigOpt = None,
@@ -339,8 +364,7 @@ def dashboard(
 
     logger.info("Lancement du dashboard interactif...")
     logger.warning(
-        "Le dashboard n'est pas encore implemente. "
-        "Prevoyez une integration Streamlit ou Panel."
+        "Le dashboard n'est pas encore implemente. Prevoyez une integration Streamlit ou Panel."
     )
     raise typer.Exit(code=0)
 

@@ -1,8 +1,9 @@
-# -*- coding: utf-8 -*-
 """Visualisations des signaux d'achat/vente du marché immobilier."""
+
 from __future__ import annotations
 
-from typing import Any, Protocol, Sequence
+from collections.abc import Sequence
+from typing import Any, Protocol
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
@@ -18,6 +19,7 @@ from .market import _auto_interval, _euro_formatter, _format_date_axis, setup_st
 # ---------------------------------------------------------------------------
 # Signal protocol — duck-typing compatible avec n'importe quel objet Signal
 # ---------------------------------------------------------------------------
+
 
 class SignalLike(Protocol):
     date: Any  # datetime-like
@@ -75,6 +77,7 @@ _SIGNAL_NUMERIC = {
 # ---------------------------------------------------------------------------
 # fig_signal_overlay
 # ---------------------------------------------------------------------------
+
 
 def fig_signal_overlay(
     agg: pd.DataFrame,
@@ -159,7 +162,8 @@ def fig_signal_overlay(
         label_fr = _SIGNAL_LABELS_FR.get(sig_type, sig_type)
         if sig_type not in legend_handles:
             legend_handles[sig_type] = ax.scatter(
-                [], [],
+                [],
+                [],
                 marker=marker,
                 s=base_size,
                 color=color,
@@ -172,7 +176,10 @@ def fig_signal_overlay(
     ax.set_xlabel("Mois")
     ax.set_ylabel("€ / m²")
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(_euro_formatter))
-    _format_date_axis(ax, interval=_auto_interval(sub.rename(columns={}) if "date_mutation" in sub.columns else sub))
+    _format_date_axis(
+        ax,
+        interval=_auto_interval(sub.rename(columns={}) if "date_mutation" in sub.columns else sub),
+    )
     ax.legend(loc="best")
     fig.tight_layout()
     return fig
@@ -181,6 +188,7 @@ def fig_signal_overlay(
 # ---------------------------------------------------------------------------
 # fig_signal_dashboard
 # ---------------------------------------------------------------------------
+
 
 def fig_signal_dashboard(
     signals: Sequence[SignalLike],
@@ -219,6 +227,7 @@ def fig_signal_dashboard(
 
         # Couleur de la ligne entière — très léger
         import matplotlib.colors as mcolors
+
         rgba = mcolors.to_rgba(color, alpha=0.12)
         cell_colors.append([rgba] * len(col_labels))
 
@@ -265,6 +274,7 @@ def fig_signal_dashboard(
 # fig_composite_indicator
 # ---------------------------------------------------------------------------
 
+
 def fig_composite_indicator(
     components: dict[str, pd.Series],
     commune: str,
@@ -297,9 +307,7 @@ def fig_composite_indicator(
         "rate_adjusted": "Ajusté aux taux",
     }
 
-    fig, axes = plt.subplots(
-        n_panels, 1, figsize=(12, 2.8 * n_panels), sharex=True
-    )
+    fig, axes = plt.subplots(n_panels, 1, figsize=(12, 2.8 * n_panels), sharex=True)
     if n_panels == 1:
         axes = [axes]
 
@@ -309,8 +317,7 @@ def fig_composite_indicator(
         ax = axes[idx]
         series = series.dropna().sort_index()
         if series.empty:
-            ax.text(0.5, 0.5, "Pas de données", ha="center", va="center",
-                    transform=ax.transAxes)
+            ax.text(0.5, 0.5, "Pas de données", ha="center", va="center", transform=ax.transAxes)
             ax.set_ylabel(component_labels_fr.get(name, name))
             continue
 
@@ -346,6 +353,7 @@ def fig_composite_indicator(
 # fig_signal_heatmap
 # ---------------------------------------------------------------------------
 
+
 def fig_signal_heatmap(
     signals_df: pd.DataFrame,
 ) -> Figure:
@@ -376,9 +384,7 @@ def fig_signal_heatmap(
     # Trier les colonnes chronologiquement
     pivot = pivot[sorted(pivot.columns)]
 
-    fig, ax = plt.subplots(
-        figsize=(max(8, len(pivot.columns) * 0.8), max(4, len(pivot) * 0.6))
-    )
+    fig, ax = plt.subplots(figsize=(max(8, len(pivot.columns) * 0.8), max(4, len(pivot) * 0.6)))
 
     cmap = sns.diverging_palette(10, 130, s=85, l=50, as_cmap=True)
     sns.heatmap(

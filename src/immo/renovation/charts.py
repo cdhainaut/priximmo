@@ -222,14 +222,11 @@ def plot_pie_by_room_absolute(df: pd.DataFrame, out_path: Path) -> None:
     grouped = aggregate_by_room(df)
     values = grouped["Total €"].values
     labels = [
-        f"{name} — {int(val):,} €".replace(",", " ")
-        for name, val in zip(grouped.index, values)
+        f"{name} — {int(val):,} €".replace(",", " ") for name, val in zip(grouped.index, values)
     ]
     fig, ax = plt.subplots(figsize=(7, 7))
     wedges, texts = ax.pie(values, startangle=90)
-    ax.legend(
-        wedges, labels, loc="center left", bbox_to_anchor=(1, 0.5), frameon=False
-    )
+    ax.legend(wedges, labels, loc="center left", bbox_to_anchor=(1, 0.5), frameon=False)
     ax.set_title("Camembert — coûts (valeurs absolues)")
     ax.axis("equal")
     _save_fig(fig, out_path, bbox_inches="tight")
@@ -256,13 +253,11 @@ def plot_costs_barh_by_room(df: pd.DataFrame, out_path: Path) -> None:
     _save_fig(fig, out_path)
 
 
-def plot_waterfall_totals(
-    df: pd.DataFrame, totals: dict[str, float], out_path: Path
-) -> None:
+def plot_waterfall_totals(df: pd.DataFrame, totals: dict[str, float], out_path: Path) -> None:
     """Waterfall simplifié : construction du total."""
     mat = float(df["Matériaux €"].sum())
     mo = float(df["Main d'œuvre €"].sum())
-    cont_key = [k for k in totals.keys() if k.startswith("Aléas")][0]
+    cont_key = [k for k in totals if k.startswith("Aléas")][0]
     cont = float(totals[cont_key])
     grand = float(totals["Total avec aléas"])
     steps = ["Matériaux", "Main d'œuvre", "Aléas", "Total"]
@@ -300,9 +295,7 @@ def plot_hours_by_room(df: pd.DataFrame, out_path: Path) -> None:
     _save_fig(fig, out_path)
 
 
-def plot_hours_top_posts(
-    df: pd.DataFrame, out_path: Path, top_k: int = 10
-) -> None:
+def plot_hours_top_posts(df: pd.DataFrame, out_path: Path, top_k: int = 10) -> None:
     """Barres : top K postes par heures MO."""
     grouped = aggregate_hours_by_post(df, top_k=top_k)
     fig, ax = plt.subplots(figsize=(9, 6))
@@ -329,12 +322,9 @@ def plot_hours_pie_by_room(df: pd.DataFrame, out_path: Path) -> None:
     fig, ax = plt.subplots(figsize=(7, 7))
     wedges, texts = ax.pie(grouped["Heures MO estimées"], startangle=90)
     labels = [
-        f"{name} — {val:.0f} h"
-        for name, val in zip(grouped.index, grouped["Heures MO estimées"])
+        f"{name} — {val:.0f} h" for name, val in zip(grouped.index, grouped["Heures MO estimées"])
     ]
-    ax.legend(
-        wedges, labels, loc="center left", bbox_to_anchor=(1, 0.5), frameon=False
-    )
+    ax.legend(wedges, labels, loc="center left", bbox_to_anchor=(1, 0.5), frameon=False)
     ax.set_title("Répartition des heures de main d'œuvre (par famille)")
     ax.axis("equal")
     _save_fig(fig, out_path, bbox_inches="tight")

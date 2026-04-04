@@ -28,6 +28,7 @@ except ImportError:
 # Data preparation
 # ---------------------------------------------------------------------------
 
+
 def prepare_prophet_data(
     agg: pd.DataFrame,
     commune: str,
@@ -63,6 +64,7 @@ def prepare_prophet_data(
 # Prophet forecast
 # ---------------------------------------------------------------------------
 
+
 def forecast_prophet(
     df: pd.DataFrame,
     horizon_months: int = 12,
@@ -94,10 +96,7 @@ def forecast_prophet(
         If ``prophet`` is not installed.
     """
     if not _PROPHET_AVAILABLE:
-        raise ImportError(
-            "Facebook Prophet is not installed. "
-            "Install it with: pip install prophet"
-        )
+        raise ImportError("Facebook Prophet is not installed. Install it with: pip install prophet")
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -119,6 +118,7 @@ def forecast_prophet(
 # ---------------------------------------------------------------------------
 # Linear forecast
 # ---------------------------------------------------------------------------
+
 
 def forecast_linear(
     series: pd.Series,
@@ -156,7 +156,7 @@ def forecast_linear(
     fitted = intercept + slope * t
     residuals = s.values - fitted
     n = len(s)
-    se = np.sqrt(np.sum(residuals ** 2) / max(1, n - 2))
+    se = np.sqrt(np.sum(residuals**2) / max(1, n - 2))
 
     # Forecast period
     t_future = np.arange(n, n + horizon_months, dtype=float)
@@ -167,8 +167,10 @@ def forecast_linear(
     # Prediction interval (widens with distance from mean of t)
     t_mean = t.mean()
     t_crit = stats.t.ppf((1 + confidence) / 2, df=max(1, n - 2))
-    margin = t_crit * se * np.sqrt(
-        1 + 1.0 / n + (t_all - t_mean) ** 2 / max(1e-9, np.sum((t - t_mean) ** 2))
+    margin = (
+        t_crit
+        * se
+        * np.sqrt(1 + 1.0 / n + (t_all - t_mean) ** 2 / max(1e-9, np.sum((t - t_mean) ** 2)))
     )
 
     # Build date index for full period
@@ -193,6 +195,7 @@ def forecast_linear(
 # ---------------------------------------------------------------------------
 # Ensemble forecast
 # ---------------------------------------------------------------------------
+
 
 def forecast_ensemble(
     agg: pd.DataFrame,
@@ -246,9 +249,7 @@ def forecast_ensemble(
                 for col in ("yhat", "yhat_lower", "yhat_upper"):
                     lin = merged.get(f"{col}_lin", merged.get(col))
                     pro = merged.get(f"{col}_pro", merged.get(col))
-                    ensemble[col] = (
-                        pd.concat([lin, pro], axis=1).mean(axis=1)
-                    )
+                    ensemble[col] = pd.concat([lin, pro], axis=1).mean(axis=1)
                 ensemble["model"] = "ensemble"
                 return ensemble.sort_values("ds").reset_index(drop=True)
             except Exception:
@@ -260,6 +261,7 @@ def forecast_ensemble(
 # ---------------------------------------------------------------------------
 # Backtesting
 # ---------------------------------------------------------------------------
+
 
 def backtest(
     agg: pd.DataFrame,
@@ -331,7 +333,10 @@ def backtest(
     dates_out = test_dates[:n]
 
     mae = float(np.mean(np.abs(actual - predicted)))
-    mape = float(np.nanmean(np.abs((actual - predicted) / np.where(actual == 0, np.nan, actual)))) * 100
+    mape = (
+        float(np.nanmean(np.abs((actual - predicted) / np.where(actual == 0, np.nan, actual))))
+        * 100
+    )
     rmse = float(np.sqrt(np.mean((actual - predicted) ** 2)))
 
     predictions_df = pd.DataFrame(

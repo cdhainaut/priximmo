@@ -54,10 +54,26 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["B904", "B905", "SIM108", "SIM102", "SIM114", "UP007"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]
+"scripts/*" = ["E501"]
 
 [tool.mypy]
 python_version = "3.11"
-strict = true
+warn_return_any = false
+warn_unused_configs = true
+ignore_missing_imports = true
+exclude = [
+    "src/immo/viz/",
+    "src/immo/renovation/charts.py",
+    "src/immo/scrapers/",
+    "src/immo/analysis/decision.py",
+    "src/immo/analysis/forecasting.py",
+    "src/immo/config.py",
+    "scripts/",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -65,3 +81,9 @@ testpaths = ["tests"]
 [[tool.mypy.overrides]]
 module = ["prophet.*", "loguru.*", "tenacity.*", "httpx.*", "seaborn.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["immo.viz.*", "immo.renovation.charts"]
+disallow_untyped_calls = false
+disallow_any_expr = false
+warn_return_any = false

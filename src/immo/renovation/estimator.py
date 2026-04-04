@@ -16,7 +16,6 @@ import pandas as pd
 
 from .models import ProjectConfig
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -52,10 +51,7 @@ def _add_row(
 def infer_trade(label: str) -> str:
     """Déduit le corps de métier à partir du libellé du poste."""
     low = label.lower()
-    if any(
-        k in low
-        for k in ["placo", "cloisons", "isolation plafonds", "combles", "peinture"]
-    ):
+    if any(k in low for k in ["placo", "cloisons", "isolation plafonds", "combles", "peinture"]):
         return "plaquiste"
     if any(k in low for k in ["sols", "carrelage", "chape"]):
         return "carreleur"
@@ -100,9 +96,7 @@ def infer_trade(label: str) -> str:
     return "autre"
 
 
-def _labor_unit_from_hourly(
-    rate: float, productivity_per_hour: float, team_size: int = 1
-) -> float:
+def _labor_unit_from_hourly(rate: float, productivity_per_hour: float, team_size: int = 1) -> float:
     """Calcule le coût MO unitaire (€/unité) à partir du taux horaire et de la productivité."""
     if productivity_per_hour <= 0 or team_size <= 0:
         return 0.0
@@ -168,19 +162,13 @@ def compute_estimate(
         isol_plaf_mo_u = _labor_unit_from_hourly(
             H.rate_plaquiste, H.rampants_m2_per_hour, H.rampants_team_size
         )
-        sols_secs_mo_u = _labor_unit_from_hourly(
-            H.rate_carreleur, H.sols_stratif_m2_per_hour, 1
-        )
+        sols_secs_mo_u = _labor_unit_from_hourly(H.rate_carreleur, H.sols_stratif_m2_per_hour, 1)
         sols_humides_mo_u = _labor_unit_from_hourly(
             H.rate_carreleur, H.sols_carrelage_m2_per_hour, 1
         )
         chape_mo_u = _labor_unit_from_hourly(H.rate_carreleur, H.chape_m2_per_hour, 1)
-        point_labor_u = _labor_unit_from_hourly(
-            H.rate_electricien, H.elec_points_per_hour, 1
-        )
-        roughin_labor_u = _labor_unit_from_hourly(
-            H.rate_electricien, H.elec_roughin_m2_per_hour, 1
-        )
+        point_labor_u = _labor_unit_from_hourly(H.rate_electricien, H.elec_points_per_hour, 1)
+        roughin_labor_u = _labor_unit_from_hourly(H.rate_electricien, H.elec_roughin_m2_per_hour, 1)
 
         # Surcharges plomberie
         plumbing.reseaux_per_m2_labor = _labor_unit_from_hourly(
@@ -424,9 +412,7 @@ def compute_estimate(
 
     # -- CHAUFFAGE (PAC + options) ------------------------------------------
     heat = heating
-    split_count = (
-        max(1, ceil(floor / 45.0)) if heat.split_count is None else heat.split_count
-    )
+    split_count = max(1, ceil(floor / 45.0)) if heat.split_count is None else heat.split_count
     if split_count > 0 and heat.include_outdoor_unit:
         _add_row(
             rows,

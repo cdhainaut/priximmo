@@ -6,16 +6,16 @@ indexing, rate sensitivity tables, and a salary-vs-capital visualisation.
 
 from __future__ import annotations
 
-import numpy as np
-import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from matplotlib.ticker import FuncFormatter
-
 
 # ---------------------------------------------------------------------------
 # Core loan maths
 # ---------------------------------------------------------------------------
+
 
 def monthly_payment(
     capital: float,
@@ -109,6 +109,7 @@ def borrowing_capacity(
 # Purchasing power index
 # ---------------------------------------------------------------------------
 
+
 def purchasing_power_index(
     prix_m2_series: pd.Series,
     rate_series: pd.Series,
@@ -140,7 +141,9 @@ def purchasing_power_index(
         Purchasable surface (m2) at each time step.
     """
     capacity = rate_series.apply(
-        lambda r: borrowing_capacity(reference_salary, r, duration, debt_ratio=0.34, insurance_rate=insurance_rate)
+        lambda r: borrowing_capacity(
+            reference_salary, r, duration, debt_ratio=0.34, insurance_rate=insurance_rate
+        )
     )
     m2_affordable = capacity / prix_m2_series.replace(0, np.nan)
     return m2_affordable.rename("purchasable_m2")
@@ -149,6 +152,7 @@ def purchasing_power_index(
 # ---------------------------------------------------------------------------
 # Rate sensitivity table
 # ---------------------------------------------------------------------------
+
 
 def rate_sensitivity(
     capital: float,
@@ -194,6 +198,7 @@ def rate_sensitivity(
 # ---------------------------------------------------------------------------
 # Equivalent price at different rate
 # ---------------------------------------------------------------------------
+
 
 def equivalent_price_at_rate(
     current_price: float,
@@ -245,6 +250,7 @@ def equivalent_price_at_rate(
 # ---------------------------------------------------------------------------
 # Salary vs capital chart
 # ---------------------------------------------------------------------------
+
 
 def plot_salary_vs_capital(
     rates: list[float],

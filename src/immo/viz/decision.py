@@ -1,12 +1,14 @@
-# -*- coding: utf-8 -*-
 """Visualisations decisionnelles — graphiques d'aide a l'achat immobilier.
 
 Ces graphiques repondent aux questions "faut-il acheter ?", "ou ?", "quand ?"
 et ne sont pas de simples representations de donnees.
 """
+
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
+
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -37,6 +39,7 @@ _BOTTOM_COLOR = "#006400"
 # Helpers internes
 # ---------------------------------------------------------------------------
 
+
 def _compute_volume_zscore(agg: pd.DataFrame, label_col: str) -> pd.DataFrame:
     """Ajoute une colonne ``vol_zscore`` normalisant n_transactions par commune."""
     df = agg.copy()
@@ -48,6 +51,7 @@ def _compute_volume_zscore(agg: pd.DataFrame, label_col: str) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # 1. fig_market_phase_diagram
 # ---------------------------------------------------------------------------
+
 
 def fig_market_phase_diagram(
     agg: pd.DataFrame,
@@ -105,7 +109,9 @@ def fig_market_phase_diagram(
         vol_sizes = sub["vol_6m"].fillna(0)
         # Normalize bubble size: min 30, max 400
         if vol_sizes.max() > vol_sizes.min():
-            norm_sizes = 30 + (vol_sizes - vol_sizes.min()) / (vol_sizes.max() - vol_sizes.min()) * 370
+            norm_sizes = (
+                30 + (vol_sizes - vol_sizes.min()) / (vol_sizes.max() - vol_sizes.min()) * 370
+            )
         else:
             norm_sizes = pd.Series(120, index=sub.index)
 
@@ -134,8 +140,6 @@ def fig_market_phase_diagram(
             n_arrow = min(3, len(trail))
             arrow_pts = trail.iloc[-n_arrow:]
             for k in range(len(arrow_pts) - 1):
-                dx = arrow_pts.iloc[k + 1]["pct_chg_3m"] - arrow_pts.iloc[k]["pct_chg_3m"]
-                dy = arrow_pts.iloc[k + 1]["vol_zscore"] - arrow_pts.iloc[k]["vol_zscore"]
                 ax.annotate(
                     "",
                     xy=(arrow_pts.iloc[k + 1]["pct_chg_3m"], arrow_pts.iloc[k + 1]["vol_zscore"]),
@@ -163,6 +167,7 @@ def fig_market_phase_diagram(
 # ---------------------------------------------------------------------------
 # 2. fig_affordability_evolution
 # ---------------------------------------------------------------------------
+
 
 def fig_affordability_evolution(
     affordability_df: pd.DataFrame,
@@ -193,7 +198,9 @@ def fig_affordability_evolution(
 
     # Area fill: green above mean, red below
     ax1.fill_between(
-        dates, m2, mean_m2,
+        dates,
+        m2,
+        mean_m2,
         where=(m2 >= mean_m2),
         interpolate=True,
         alpha=0.25,
@@ -201,7 +208,9 @@ def fig_affordability_evolution(
         label="Au-dessus de la moyenne",
     )
     ax1.fill_between(
-        dates, m2, mean_m2,
+        dates,
+        m2,
+        mean_m2,
         where=(m2 < mean_m2),
         interpolate=True,
         alpha=0.25,
@@ -211,10 +220,22 @@ def fig_affordability_evolution(
     ax1.plot(dates, m2, color="#1f77b4", linewidth=2)
 
     # Horizontal lines
-    ax1.axhline(mean_m2, color=_NEUTRAL_COLOR, linewidth=1, linestyle=":", alpha=0.7,
-                label=f"Moyenne ({mean_m2:.0f} m\u00b2)")
-    ax1.axhline(peak_m2, color=_BUY_COLOR, linewidth=1, linestyle="--", alpha=0.5,
-                label=f"Pic ({peak_m2:.0f} m\u00b2)")
+    ax1.axhline(
+        mean_m2,
+        color=_NEUTRAL_COLOR,
+        linewidth=1,
+        linestyle=":",
+        alpha=0.7,
+        label=f"Moyenne ({mean_m2:.0f} m\u00b2)",
+    )
+    ax1.axhline(
+        peak_m2,
+        color=_BUY_COLOR,
+        linewidth=1,
+        linestyle="--",
+        alpha=0.5,
+        label=f"Pic ({peak_m2:.0f} m\u00b2)",
+    )
 
     ax1.set_ylabel("Surface achetable (m\u00b2)", color="#1f77b4")
     ax1.tick_params(axis="y", labelcolor="#1f77b4")
@@ -236,8 +257,14 @@ def fig_affordability_evolution(
     # Secondary axis: interest rate
     if "taux_interet" in sub.columns:
         ax2 = ax1.twinx()
-        ax2.plot(dates, sub["taux_interet"], color=_PALETTE[3], linewidth=1.5,
-                 linestyle="--", label="Taux d'int\u00e9r\u00eat (%)")
+        ax2.plot(
+            dates,
+            sub["taux_interet"],
+            color=_PALETTE[3],
+            linewidth=1.5,
+            linestyle="--",
+            label="Taux d'int\u00e9r\u00eat (%)",
+        )
         ax2.set_ylabel("Taux d'int\u00e9r\u00eat annuel (%)", color=_PALETTE[3])
         ax2.tick_params(axis="y", labelcolor=_PALETTE[3])
         # Combined legend
@@ -257,6 +284,7 @@ def fig_affordability_evolution(
 # ---------------------------------------------------------------------------
 # 3. fig_drawdown
 # ---------------------------------------------------------------------------
+
 
 def fig_drawdown(
     agg: pd.DataFrame,
@@ -294,15 +322,37 @@ def fig_drawdown(
     # Zone labels on the right edge
     right_x = 0.98
     zone_kw = dict(fontsize=8, ha="right", va="center", transform=ax.transAxes, alpha=0.5)
-    ax.text(right_x, ax.transData.inverted().transform(
-        ax.transAxes.transform((0, 0)))[1], "", **zone_kw)  # dummy
+    ax.text(
+        right_x, ax.transData.inverted().transform(ax.transAxes.transform((0, 0)))[1], "", **zone_kw
+    )  # dummy
 
-    ax.annotate("Normal", xy=(1.01, -2.5), xycoords=("axes fraction", "data"),
-                fontsize=8, color=_BUY_COLOR, alpha=0.7, va="center")
-    ax.annotate("Correction", xy=(1.01, -10), xycoords=("axes fraction", "data"),
-                fontsize=8, color="#ff7f0e", alpha=0.7, va="center")
-    ax.annotate("Opportunit\u00e9", xy=(1.01, -17.5), xycoords=("axes fraction", "data"),
-                fontsize=8, color=_SELL_COLOR, alpha=0.7, va="center")
+    ax.annotate(
+        "Normal",
+        xy=(1.01, -2.5),
+        xycoords=("axes fraction", "data"),
+        fontsize=8,
+        color=_BUY_COLOR,
+        alpha=0.7,
+        va="center",
+    )
+    ax.annotate(
+        "Correction",
+        xy=(1.01, -10),
+        xycoords=("axes fraction", "data"),
+        fontsize=8,
+        color="#ff7f0e",
+        alpha=0.7,
+        va="center",
+    )
+    ax.annotate(
+        "Opportunit\u00e9",
+        xy=(1.01, -17.5),
+        xycoords=("axes fraction", "data"),
+        fontsize=8,
+        color=_SELL_COLOR,
+        alpha=0.7,
+        va="center",
+    )
 
     ax.axhline(0, color=_NEUTRAL_COLOR, linewidth=0.8, linestyle="-", alpha=0.4)
     ax.axhline(-5, color=_NEUTRAL_COLOR, linewidth=0.5, linestyle=":", alpha=0.3)
@@ -322,6 +372,7 @@ def fig_drawdown(
 # ---------------------------------------------------------------------------
 # 4. fig_price_volume_divergence
 # ---------------------------------------------------------------------------
+
 
 def fig_price_volume_divergence(
     agg: pd.DataFrame,
@@ -354,7 +405,10 @@ def fig_price_volume_divergence(
     divergence = vol_norm - price_norm
 
     fig, (ax_top, ax_bot) = plt.subplots(
-        2, 1, figsize=(12, 8), sharex=True,
+        2,
+        1,
+        figsize=(12, 8),
+        sharex=True,
         gridspec_kw={"height_ratios": [1.2, 1]},
     )
 
@@ -386,6 +440,7 @@ def fig_price_volume_divergence(
 # ---------------------------------------------------------------------------
 # 5. fig_commune_scorecard
 # ---------------------------------------------------------------------------
+
 
 def fig_commune_scorecard(
     scorecard_df: pd.DataFrame,
@@ -430,9 +485,14 @@ def fig_commune_scorecard(
             text_color = "white"
 
         ax.text(
-            text_x, bar_obj.get_y() + bar_obj.get_height() / 2,
-            annotation, va="center", ha="left" if score <= 85 else "right",
-            fontsize=8, color=text_color, fontweight="bold",
+            text_x,
+            bar_obj.get_y() + bar_obj.get_height() / 2,
+            annotation,
+            va="center",
+            ha="left" if score <= 85 else "right",
+            fontsize=8,
+            color=text_color,
+            fontweight="bold",
         )
 
     ax.set_xlim(0, 110)
@@ -446,6 +506,7 @@ def fig_commune_scorecard(
 # ---------------------------------------------------------------------------
 # 6. fig_rate_adjusted_comparison
 # ---------------------------------------------------------------------------
+
 
 def fig_rate_adjusted_comparison(
     agg: pd.DataFrame,
@@ -476,7 +537,6 @@ def fig_rate_adjusted_comparison(
 
     fig, ax = plt.subplots(figsize=(12, 6))
 
-    ref_monthly = reference_rate / 12
     n_months = 240  # 20 years
 
     def _annuity_factor(annual_rate: float) -> float:
@@ -494,8 +554,14 @@ def fig_rate_adjusted_comparison(
         dates = sub["date_mutation"]
 
         # Nominal
-        ax.plot(dates, sub[price_col], linewidth=1.8, color=color,
-                label=f"{label} (nominal)", linestyle="-")
+        ax.plot(
+            dates,
+            sub[price_col],
+            linewidth=1.8,
+            color=color,
+            label=f"{label} (nominal)",
+            linestyle="-",
+        )
 
         # Rate-adjusted
         if rate_col is not None:
@@ -506,26 +572,42 @@ def fig_rate_adjusted_comparison(
                 if current_factor > 0:
                     adjusted.iloc[i] = row[price_col] * (ref_factor / current_factor)
 
-            ax.plot(dates, adjusted, linewidth=1.5, color=color,
-                    label=f"{label} (ajust\u00e9 @{reference_rate*100:.1f}%)", linestyle="--")
+            ax.plot(
+                dates,
+                adjusted,
+                linewidth=1.5,
+                color=color,
+                label=f"{label} (ajust\u00e9 @{reference_rate * 100:.1f}%)",
+                linestyle="--",
+            )
 
             # Shading
             ax.fill_between(
-                dates, sub[price_col], adjusted,
+                dates,
+                sub[price_col],
+                adjusted,
                 where=(adjusted >= sub[price_col]),
-                interpolate=True, alpha=0.1, color=_BUY_COLOR,
+                interpolate=True,
+                alpha=0.1,
+                color=_BUY_COLOR,
             )
             ax.fill_between(
-                dates, sub[price_col], adjusted,
+                dates,
+                sub[price_col],
+                adjusted,
                 where=(adjusted < sub[price_col]),
-                interpolate=True, alpha=0.1, color=_SELL_COLOR,
+                interpolate=True,
+                alpha=0.1,
+                color=_SELL_COLOR,
             )
 
     # Legend for shading
-    green_patch = mpatches.Patch(color=_BUY_COLOR, alpha=0.2,
-                                 label="Taux favorables (moins cher en r\u00e9el)")
-    red_patch = mpatches.Patch(color=_SELL_COLOR, alpha=0.2,
-                               label="Taux d\u00e9favorables (plus cher en r\u00e9el)")
+    green_patch = mpatches.Patch(
+        color=_BUY_COLOR, alpha=0.2, label="Taux favorables (moins cher en r\u00e9el)"
+    )
+    red_patch = mpatches.Patch(
+        color=_SELL_COLOR, alpha=0.2, label="Taux d\u00e9favorables (plus cher en r\u00e9el)"
+    )
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles=handles + [green_patch, red_patch], loc="best", fontsize=8)
 
@@ -541,6 +623,7 @@ def fig_rate_adjusted_comparison(
 # ---------------------------------------------------------------------------
 # 7. fig_decision_dashboard
 # ---------------------------------------------------------------------------
+
 
 def fig_decision_dashboard(
     agg: pd.DataFrame,
@@ -558,10 +641,11 @@ def fig_decision_dashboard(
     gs = fig.add_gridspec(2, 3, hspace=0.35, wspace=0.3)
 
     # Determine top-scored commune for single-commune charts
-    top_commune = scorecard_df.sort_values("score", ascending=False).iloc[0]["commune"] \
-        if len(scorecard_df) > 0 else (
-            agg[label_col].iloc[0] if label_col in agg.columns and len(agg) > 0 else "N/A"
-        )
+    top_commune = (
+        scorecard_df.sort_values("score", ascending=False).iloc[0]["commune"]
+        if len(scorecard_df) > 0
+        else (agg[label_col].iloc[0] if label_col in agg.columns and len(agg) > 0 else "N/A")
+    )
 
     today_str = datetime.now().strftime("%d/%m/%Y")
 
@@ -591,7 +675,9 @@ def fig_decision_dashboard(
 
     fig.suptitle(
         f"Tableau de bord d\u00e9cisionnaire \u2014 {today_str}",
-        fontsize=16, fontweight="bold", y=1.01,
+        fontsize=16,
+        fontweight="bold",
+        y=1.01,
     )
     fig.tight_layout(rect=[0, 0, 1, 0.98])
     return fig
@@ -601,7 +687,8 @@ def fig_decision_dashboard(
 # Dashboard sub-drawing helpers (draw onto existing axes)
 # ---------------------------------------------------------------------------
 
-def _draw_phase_diagram_on_ax(ax: plt.Axes, agg: pd.DataFrame, label_col: str) -> None:
+
+def _draw_phase_diagram_on_ax(ax: Any, agg: pd.DataFrame, label_col: str) -> None:
     """Simplified market phase diagram drawn onto a given axes."""
     df = _compute_volume_zscore(agg, label_col)
     groups = df.groupby(label_col)
@@ -618,13 +705,22 @@ def _draw_phase_diagram_on_ax(ax: plt.Axes, agg: pd.DataFrame, label_col: str) -
         color = palette[idx % len(palette)]
         # Latest point only
         latest = sub.iloc[-1]
-        ax.scatter(latest["pct_chg_3m"], latest["vol_zscore"], s=100,
-                   color=color, edgecolors="white", linewidths=0.8, label=label, zorder=4)
+        ax.scatter(
+            latest["pct_chg_3m"],
+            latest["vol_zscore"],
+            s=100,
+            color=color,
+            edgecolors="white",
+            linewidths=0.8,
+            label=label,
+            zorder=4,
+        )
         # Small trail
-        trail = sub.iloc[-min(4, len(sub)):-1]
+        trail = sub.iloc[-min(4, len(sub)) : -1]
         if not trail.empty:
-            ax.scatter(trail["pct_chg_3m"], trail["vol_zscore"], s=30,
-                       color=color, alpha=0.3, zorder=3)
+            ax.scatter(
+                trail["pct_chg_3m"], trail["vol_zscore"], s=30, color=color, alpha=0.3, zorder=3
+            )
 
     ax.set_xlabel("Momentum 3m (%)", fontsize=8)
     ax.set_ylabel("Volume z-score", fontsize=8)
@@ -632,7 +728,7 @@ def _draw_phase_diagram_on_ax(ax: plt.Axes, agg: pd.DataFrame, label_col: str) -
     ax.legend(fontsize=6, loc="upper left")
 
 
-def _draw_scorecard_on_ax(ax: plt.Axes, scorecard_df: pd.DataFrame) -> None:
+def _draw_scorecard_on_ax(ax: Any, scorecard_df: pd.DataFrame) -> None:
     """Simplified scorecard bars on given axes."""
     df = scorecard_df.sort_values("score", ascending=True).copy()
     cmap = mcolors.LinearSegmentedColormap.from_list("sc", [_SELL_COLOR, "#ff7f0e", _BUY_COLOR])
@@ -641,15 +737,21 @@ def _draw_scorecard_on_ax(ax: plt.Axes, scorecard_df: pd.DataFrame) -> None:
 
     bars = ax.barh(df["commune"], df["score"], color=colors, edgecolor="white", linewidth=0.4)
     for bar_obj, (_, row) in zip(bars, df.iterrows()):
-        ax.text(row["score"] + 1, bar_obj.get_y() + bar_obj.get_height() / 2,
-                f'{row["score"]:.0f}', va="center", fontsize=7, fontweight="bold")
+        ax.text(
+            row["score"] + 1,
+            bar_obj.get_y() + bar_obj.get_height() / 2,
+            f"{row['score']:.0f}",
+            va="center",
+            fontsize=7,
+            fontweight="bold",
+        )
 
     ax.set_xlim(0, 110)
     ax.set_title("Scores d\u2019attractivit\u00e9", fontsize=10, fontweight="bold")
     ax.tick_params(labelsize=7)
 
 
-def _draw_drawdown_on_ax(ax: plt.Axes, agg: pd.DataFrame, label_col: str) -> None:
+def _draw_drawdown_on_ax(ax: Any, agg: pd.DataFrame, label_col: str) -> None:
     """Simplified drawdown chart on given axes."""
     groups = agg.groupby(label_col)
     palette = sns.color_palette("deep", n_colors=max(groups.ngroups, 1))
@@ -672,12 +774,19 @@ def _draw_drawdown_on_ax(ax: plt.Axes, agg: pd.DataFrame, label_col: str) -> Non
     ax.legend(fontsize=6, loc="lower left")
 
 
-def _draw_affordability_on_ax(ax: plt.Axes, affordability_df: pd.DataFrame, commune: str) -> None:
+def _draw_affordability_on_ax(ax: Any, affordability_df: pd.DataFrame, commune: str) -> None:
     """Simplified affordability chart on given axes."""
     sub = affordability_df[affordability_df["commune"] == commune].copy()
     if sub.empty:
-        ax.text(0.5, 0.5, f"Pas de donn\u00e9es\n{commune}", ha="center", va="center",
-                transform=ax.transAxes, fontsize=10)
+        ax.text(
+            0.5,
+            0.5,
+            f"Pas de donn\u00e9es\n{commune}",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+            fontsize=10,
+        )
         ax.set_title(f"Pouvoir d\u2019achat \u2014 {commune}", fontsize=10, fontweight="bold")
         return
 
@@ -686,10 +795,12 @@ def _draw_affordability_on_ax(ax: plt.Axes, affordability_df: pd.DataFrame, comm
     dates = sub["date"]
     mean_m2 = m2.mean()
 
-    ax.fill_between(dates, m2, mean_m2, where=(m2 >= mean_m2),
-                    interpolate=True, alpha=0.2, color=_BUY_COLOR)
-    ax.fill_between(dates, m2, mean_m2, where=(m2 < mean_m2),
-                    interpolate=True, alpha=0.2, color=_SELL_COLOR)
+    ax.fill_between(
+        dates, m2, mean_m2, where=(m2 >= mean_m2), interpolate=True, alpha=0.2, color=_BUY_COLOR
+    )
+    ax.fill_between(
+        dates, m2, mean_m2, where=(m2 < mean_m2), interpolate=True, alpha=0.2, color=_SELL_COLOR
+    )
     ax.plot(dates, m2, color="#1f77b4", linewidth=1.5)
     ax.axhline(mean_m2, color=_NEUTRAL_COLOR, linewidth=0.7, linestyle=":", alpha=0.6)
 
@@ -699,7 +810,9 @@ def _draw_affordability_on_ax(ax: plt.Axes, affordability_df: pd.DataFrame, comm
 
 
 def _draw_rate_adjusted_on_ax(
-    ax: plt.Axes, agg: pd.DataFrame, label_col: str,
+    ax: Any,
+    agg: pd.DataFrame,
+    label_col: str,
     reference_rate: float = 0.035,
 ) -> None:
     """Simplified rate-adjusted comparison on given axes."""
@@ -743,14 +856,21 @@ def _draw_rate_adjusted_on_ax(
     ax.legend(fontsize=6, loc="best")
 
 
-def _draw_divergence_on_ax(ax: plt.Axes, agg: pd.DataFrame, commune: str) -> None:
+def _draw_divergence_on_ax(ax: Any, agg: pd.DataFrame, commune: str) -> None:
     """Simplified price-volume divergence bars on given axes."""
     sub = agg[agg["commune"] == commune].copy() if "commune" in agg.columns else agg.copy()
     sub = sub.sort_values("date_mutation").dropna(subset=["pct_chg_3m"])
 
     if sub.empty:
-        ax.text(0.5, 0.5, f"Pas de donn\u00e9es\n{commune}", ha="center", va="center",
-                transform=ax.transAxes, fontsize=10)
+        ax.text(
+            0.5,
+            0.5,
+            f"Pas de donn\u00e9es\n{commune}",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+            fontsize=10,
+        )
         ax.set_title(f"Divergence \u2014 {commune}", fontsize=10, fontweight="bold")
         return
 

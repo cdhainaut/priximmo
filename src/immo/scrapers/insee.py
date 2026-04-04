@@ -36,6 +36,7 @@ _DATASET_PERMITS = "SIT-CONJ"  # Situation conjoncturelle (includes permits)
 # HTTP helper
 # ---------------------------------------------------------------------------
 
+
 def _build_headers(token: str | None) -> dict[str, str]:
     """Build HTTP headers for the INSEE API.
 
@@ -69,6 +70,7 @@ def _insee_get(
 # ---------------------------------------------------------------------------
 # Population
 # ---------------------------------------------------------------------------
+
 
 def fetch_population_by_commune(
     insee_codes: list[int],
@@ -107,24 +109,28 @@ def fetch_population_by_commune(
                     break
 
             if pop_value is not None:
-                rows.append({
-                    "insee_code": code,
-                    "commune_name": data.get("Zone", {}).get("Libelle", ""),
-                    "population": int(pop_value),
-                    "year": data.get("Annee", ""),
-                })
+                rows.append(
+                    {
+                        "insee_code": code,
+                        "commune_name": data.get("Zone", {}).get("Libelle", ""),
+                        "population": int(pop_value),
+                        "year": data.get("Annee", ""),
+                    }
+                )
                 continue
 
         except Exception as exc:
             logger.debug("INSEE API call failed for {}: {}", code_str, exc)
 
         # Fallback: append placeholder
-        rows.append({
-            "insee_code": code,
-            "commune_name": "",
-            "population": None,
-            "year": None,
-        })
+        rows.append(
+            {
+                "insee_code": code,
+                "commune_name": "",
+                "population": None,
+                "year": None,
+            }
+        )
         logger.debug("Using placeholder for commune {}", code_str)
 
     df = pd.DataFrame(rows)
@@ -156,18 +162,21 @@ def _mock_population(insee_codes: list[int]) -> pd.DataFrame:
     rows = []
     for code in insee_codes:
         name, pop = known.get(code, ("Unknown", 0))
-        rows.append({
-            "insee_code": code,
-            "commune_name": name,
-            "population": pop,
-            "year": 2021,
-        })
+        rows.append(
+            {
+                "insee_code": code,
+                "commune_name": name,
+                "population": pop,
+                "year": 2021,
+            }
+        )
     return pd.DataFrame(rows)
 
 
 # ---------------------------------------------------------------------------
 # Unemployment
 # ---------------------------------------------------------------------------
+
 
 def fetch_unemployment_by_department(
     departments: list[int],
@@ -198,12 +207,14 @@ def fetch_unemployment_by_department(
             data = _insee_get(url, token=token, params=params)
 
             for cell in data.get("Cellule", []):
-                rows.append({
-                    "department": dept,
-                    "department_name": data.get("Zone", {}).get("Libelle", ""),
-                    "quarter": cell.get("Periode", ""),
-                    "unemployment_rate_pct": float(cell.get("Valeur", 0)),
-                })
+                rows.append(
+                    {
+                        "department": dept,
+                        "department_name": data.get("Zone", {}).get("Libelle", ""),
+                        "quarter": cell.get("Periode", ""),
+                        "unemployment_rate_pct": float(cell.get("Valeur", 0)),
+                    }
+                )
             if rows:
                 continue
 
@@ -223,28 +234,36 @@ def fetch_unemployment_by_department(
 def _mock_unemployment(departments: list[int]) -> pd.DataFrame:
     """Representative mock unemployment data."""
     dept_names: dict[int, str] = {
-        29: "Finistere", 56: "Morbihan", 76: "Seine-Maritime",
-        75: "Paris", 69: "Rhone", 13: "Bouches-du-Rhone",
+        29: "Finistere",
+        56: "Morbihan",
+        76: "Seine-Maritime",
+        75: "Paris",
+        69: "Rhone",
+        13: "Bouches-du-Rhone",
     }
     quarters = ["2023-T1", "2023-T2", "2023-T3", "2023-T4", "2024-T1", "2024-T2"]
     rows = []
     import random
+
     rng = random.Random(42)
     for dept in departments:
         base = rng.uniform(6.0, 9.5)
         for q in quarters:
-            rows.append({
-                "department": dept,
-                "department_name": dept_names.get(dept, f"Dept {dept}"),
-                "quarter": q,
-                "unemployment_rate_pct": round(base + rng.gauss(0, 0.3), 1),
-            })
+            rows.append(
+                {
+                    "department": dept,
+                    "department_name": dept_names.get(dept, f"Dept {dept}"),
+                    "quarter": q,
+                    "unemployment_rate_pct": round(base + rng.gauss(0, 0.3), 1),
+                }
+            )
     return pd.DataFrame(rows)
 
 
 # ---------------------------------------------------------------------------
 # Construction permits
 # ---------------------------------------------------------------------------
+
 
 def fetch_construction_permits(
     departments: list[int],
@@ -274,12 +293,7 @@ def fetch_construction_permits(
     for dept in departments:
         dept_str = str(dept).zfill(2)
         try:
-            # SITADEL2 open data on data.gouv.fr
-            url = (
-                "https://www.data.gouv.fr/fr/datasets/r/"
-                "a4561884-07d1-4ef1-a8e3-4cfbc0f1e2f5"
-            )
-            # This is a nationwide CSV; we filter locally
+            # SITADEL2 open data on data.gouv.fr (nationwide CSV, filtered locally)
             # In practice the INSEE API or SITADEL API may be more targeted
             data = _insee_get(
                 f"{_INSEE_API_BASE}/donnees/geo-departement/{dept_str}.all",
@@ -287,12 +301,14 @@ def fetch_construction_permits(
                 params={"croisement": "CONSTR-PERMIT"},
             )
             for cell in data.get("Cellule", []):
-                rows.append({
-                    "department": dept,
-                    "date": pd.Period(cell.get("Periode", "")[:7], freq="M"),
-                    "permits_count": int(float(cell.get("Valeur", 0))),
-                    "type": cell.get("Modalite", {}).get("Libelle", "total"),
-                })
+                rows.append(
+                    {
+                        "department": dept,
+                        "date": pd.Period(cell.get("Periode", "")[:7], freq="M"),
+                        "permits_count": int(float(cell.get("Valeur", 0))),
+                        "type": cell.get("Modalite", {}).get("Libelle", "total"),
+                    }
+                )
         except Exception as exc:
             logger.debug("Construction permits API failed for dept {}: {}", dept_str, exc)
 
@@ -309,6 +325,7 @@ def fetch_construction_permits(
 def _mock_permits(departments: list[int]) -> pd.DataFrame:
     """Representative mock building-permit data."""
     import random
+
     rng = random.Random(42)
     rows = []
     for dept in departments:
@@ -317,10 +334,12 @@ def _mock_permits(departments: list[int]) -> pd.DataFrame:
             for month in range(1, 13):
                 for ptype in ("individuel", "collectif"):
                     count = max(0, int(base + rng.gauss(0, base * 0.15)))
-                    rows.append({
-                        "department": dept,
-                        "date": pd.Period(f"{year}-{month:02d}", freq="M"),
-                        "permits_count": count,
-                        "type": ptype,
-                    })
+                    rows.append(
+                        {
+                            "department": dept,
+                            "date": pd.Period(f"{year}-{month:02d}", freq="M"),
+                            "permits_count": count,
+                            "type": ptype,
+                        }
+                    )
     return pd.DataFrame(rows)

@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from immo.renovation.models import Dimensions, ProjectConfig
 from immo.renovation.estimator import compute_estimate
+from immo.renovation.models import Dimensions, ProjectConfig
 
 
 def test_compute_estimate_default():

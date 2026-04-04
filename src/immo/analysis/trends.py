@@ -12,10 +12,10 @@ import pandas as pd
 
 from ..utils.filters import smooth_series
 
-
 # ---------------------------------------------------------------------------
 # Monthly aggregation
 # ---------------------------------------------------------------------------
+
 
 def monthly_aggregate(
     df: pd.DataFrame,
@@ -57,6 +57,7 @@ def monthly_aggregate(
 # ---------------------------------------------------------------------------
 # Derived metrics
 # ---------------------------------------------------------------------------
+
 
 def add_derived_metrics(
     agg: pd.DataFrame,
@@ -113,6 +114,7 @@ def add_derived_metrics(
 # Overall / global series
 # ---------------------------------------------------------------------------
 
+
 def add_overall_series(
     agg: pd.DataFrame,
     label_col: str = "commune",
@@ -154,6 +156,7 @@ def add_overall_series(
 # ---------------------------------------------------------------------------
 # Seasonal decomposition
 # ---------------------------------------------------------------------------
+
 
 def decompose_trend(
     series: pd.Series,
@@ -208,6 +211,7 @@ def decompose_trend(
 # Regional comparison
 # ---------------------------------------------------------------------------
 
+
 def compare_regions(
     agg: pd.DataFrame,
     regions: dict[str, list[str]],
@@ -255,6 +259,7 @@ def compare_regions(
 # ---------------------------------------------------------------------------
 # Year-over-year acceleration
 # ---------------------------------------------------------------------------
+
 
 def yoy_acceleration(series: pd.Series) -> pd.Series:
     """Compute the second derivative of year-over-year change.

@@ -14,10 +14,10 @@ import pandas as pd
 from loguru import logger
 from scipy.signal import butter, filtfilt
 
-
 # ---------------------------------------------------------------------------
 # Outlier removal
 # ---------------------------------------------------------------------------
+
 
 def remove_outliers_mad(
     df: pd.DataFrame,
@@ -47,6 +47,7 @@ def remove_outliers_mad(
     pd.DataFrame
         Copy of *df* with outlier rows removed.
     """
+
     def _modified_z(x: pd.Series) -> pd.Series:
         med = x.median()
         mad = np.median(np.abs(x - med))
@@ -61,7 +62,9 @@ def remove_outliers_mad(
     if n_removed > 0:
         logger.debug(
             "MAD outlier removal: dropped {} / {} rows (threshold={:.1f})",
-            n_removed, n_before, threshold,
+            n_removed,
+            n_before,
+            threshold,
         )
     return result
 
@@ -69,6 +72,7 @@ def remove_outliers_mad(
 # ---------------------------------------------------------------------------
 # Butterworth filter
 # ---------------------------------------------------------------------------
+
 
 def butterworth_smooth(
     series: pd.Series,
@@ -110,7 +114,8 @@ def butterworth_smooth(
     if len(series) < 2 * order + 1:
         logger.warning(
             "Series too short ({}) for Butterworth order {}; returning as-is",
-            len(series), order,
+            len(series),
+            order,
         )
         return series
 
@@ -129,6 +134,7 @@ def butterworth_smooth(
 # ---------------------------------------------------------------------------
 # Rolling smoothing
 # ---------------------------------------------------------------------------
+
 
 def rolling_smooth(
     series: pd.Series,
@@ -165,6 +171,7 @@ def rolling_smooth(
 # ---------------------------------------------------------------------------
 # EWM smoothing
 # ---------------------------------------------------------------------------
+
 
 def ewm_smooth(series: pd.Series, span: int) -> pd.Series:
     """Exponentially weighted moving average.

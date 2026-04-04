@@ -1,5 +1,14 @@
-# -*- coding: utf-8 -*-
 """Visualisation et rapports pour l'analyse immobilière."""
+
+from .decision import (
+    fig_affordability_evolution,
+    fig_commune_scorecard,
+    fig_decision_dashboard,
+    fig_drawdown,
+    fig_market_phase_diagram,
+    fig_price_volume_divergence,
+    fig_rate_adjusted_comparison,
+)
 from .market import (
     fig_heatmap_monthly,
     fig_price_comparison,
@@ -16,15 +25,6 @@ from .reports import (
     generate_full_report,
     generate_market_report,
     generate_signal_report,
-)
-from .decision import (
-    fig_affordability_evolution,
-    fig_commune_scorecard,
-    fig_decision_dashboard,
-    fig_drawdown,
-    fig_market_phase_diagram,
-    fig_price_volume_divergence,
-    fig_rate_adjusted_comparison,
 )
 from .signals import (
     fig_composite_indicator,
