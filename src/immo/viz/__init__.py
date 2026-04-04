@@ -17,6 +17,15 @@ from .reports import (
     generate_market_report,
     generate_signal_report,
 )
+from .decision import (
+    fig_affordability_evolution,
+    fig_commune_scorecard,
+    fig_decision_dashboard,
+    fig_drawdown,
+    fig_market_phase_diagram,
+    fig_price_volume_divergence,
+    fig_rate_adjusted_comparison,
+)
 from .signals import (
     fig_composite_indicator,
     fig_signal_dashboard,
@@ -40,6 +49,14 @@ __all__ = [
     "fig_signal_dashboard",
     "fig_composite_indicator",
     "fig_signal_heatmap",
+    # decision
+    "fig_market_phase_diagram",
+    "fig_affordability_evolution",
+    "fig_drawdown",
+    "fig_price_volume_divergence",
+    "fig_commune_scorecard",
+    "fig_rate_adjusted_comparison",
+    "fig_decision_dashboard",
     # reports
     "ReportConfig",
     "generate_market_report",

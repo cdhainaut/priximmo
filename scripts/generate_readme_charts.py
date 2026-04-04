@@ -251,6 +251,100 @@ plt.close(fig)
 print("  -> saved")
 
 # ===========================================================================
+# 8-13. Decision-grade charts (requires immo.analysis.decision & immo.viz.decision)
+# ===========================================================================
+try:
+    from immo.analysis.decision import (
+        affordability_timeline,
+        market_phase_history,
+        commune_scorecard,
+        drawdown_from_peak,
+        price_volume_divergence,
+        rate_adjusted_price,
+        decision_summary,
+    )
+    from immo.viz.decision import (
+        fig_market_phase_diagram,
+        fig_affordability_evolution,
+        fig_drawdown,
+        fig_commune_scorecard,
+        fig_rate_adjusted_comparison,
+        fig_decision_dashboard,
+    )
+
+    _HAS_DECISION = True
+except ImportError:
+    _HAS_DECISION = False
+    print("\n[!] Decision modules not available yet — skipping charts 8-13.")
+    print("    Waiting for: immo.analysis.decision, immo.viz.decision")
+
+if _HAS_DECISION:
+    print("\n[8-13] Computing decision metrics ...")
+
+    # All decision functions take the full agg DataFrame
+    phase_df = market_phase_history(agg, label_col="commune")
+    scorecard_df = commune_scorecard(agg, label_col="commune")
+
+    # Affordability for each commune -> concat into one DF
+    aff_parts = []
+    for commune in communes:
+        af = affordability_timeline(agg, commune=commune)
+        # Normalize column names for viz module
+        af = af.rename(columns={"purchasable_m2": "m2_achetables"})
+        if "rate" in af.columns:
+            af["taux_interet"] = af["rate"] * 100
+        af["commune"] = commune
+        aff_parts.append(af)
+    affordability_df = pd.concat(aff_parts, ignore_index=True)
+
+    # -- 8. fig_phase.svg  -- Market phase diagram -----------------------------
+    print("\n[8/13] fig_phase.svg ...")
+    fig = fig_market_phase_diagram(phase_df, label_col="commune")
+    fig.savefig(OUT_DIR / "fig_phase.svg", format="svg", bbox_inches="tight")
+    plt.close(fig)
+    print("  -> saved")
+
+    # -- 9. fig_affordability.svg  -- Affordability evolution -------------------
+    print("\n[9/13] fig_affordability.svg ...")
+    best_commune = scorecard_df.iloc[0]["commune"] if len(scorecard_df) > 0 else communes[0]
+    fig = fig_affordability_evolution(affordability_df, commune=best_commune)
+    fig.savefig(OUT_DIR / "fig_affordability.svg", format="svg", bbox_inches="tight")
+    plt.close(fig)
+    print(f"  -> saved (commune: {best_commune})")
+
+    # -- 10. fig_drawdown.svg  -- Drawdown from peak ---------------------------
+    print("\n[10/13] fig_drawdown.svg ...")
+    fig = fig_drawdown(agg, label_col="commune")
+    fig.savefig(OUT_DIR / "fig_drawdown.svg", format="svg", bbox_inches="tight")
+    plt.close(fig)
+    print("  -> saved")
+
+    # -- 11. fig_scorecard.svg  -- Commune scorecard ---------------------------
+    print("\n[11/13] fig_scorecard.svg ...")
+    fig = fig_commune_scorecard(scorecard_df)
+    fig.savefig(OUT_DIR / "fig_scorecard.svg", format="svg", bbox_inches="tight")
+    plt.close(fig)
+    print("  -> saved")
+
+    # -- 12. fig_rate_adjusted.svg  -- Rate-adjusted price comparison ----------
+    print("\n[12/13] fig_rate_adjusted.svg ...")
+    fig = fig_rate_adjusted_comparison(agg, label_col="commune")
+    fig.savefig(OUT_DIR / "fig_rate_adjusted.svg", format="svg", bbox_inches="tight")
+    plt.close(fig)
+    print("  -> saved")
+
+    # -- 13. fig_decision_dashboard.svg  -- Combined decision dashboard --------
+    print("\n[13/13] fig_decision_dashboard.svg ...")
+    fig = fig_decision_dashboard(agg, scorecard_df, affordability_df, label_col="commune")
+    fig.savefig(OUT_DIR / "fig_decision_dashboard.svg", format="svg", bbox_inches="tight")
+    plt.close(fig)
+    print("  -> saved")
+
+    # -- Decision summary (text) -----------------------------------------------
+    print("\n--- Decision Summary ---")
+    print(decision_summary(agg, label_col="commune"))
+
+# ===========================================================================
 # Summary
 # ===========================================================================
 print("\n--- Done! Generated files in docs/assets/ ---")

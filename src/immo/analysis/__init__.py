@@ -1,5 +1,5 @@
-"""Analysis sub-package: trends, signals, rates, and forecasting."""
+"""Analysis sub-package: trends, signals, rates, forecasting, and decision."""
 
-from . import forecasting, rates, signals, trends
+from . import decision, forecasting, rates, signals, trends
 
-__all__ = ["forecasting", "rates", "signals", "trends"]
+__all__ = ["decision", "forecasting", "rates", "signals", "trends"]

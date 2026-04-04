@@ -71,6 +71,53 @@
 
 ---
 
+## Aide a la decision
+
+Ces graphiques vont au-dela de la simple visualisation de donnees — ils repondent directement a **"j'achete ou pas, ou, et quand ?"**
+
+### Tableau de bord decisionnaire
+
+<p align="center">
+  <img src="docs/assets/fig_decision_dashboard.svg" alt="Decision Dashboard" width="100%" />
+</p>
+
+### Phase de marche (diagramme momentum x volume)
+
+<p align="center">
+  <img src="docs/assets/fig_phase.svg" alt="Market Phase" width="48%" />
+  <img src="docs/assets/fig_scorecard.svg" alt="Scorecard" width="48%" />
+</p>
+
+<p align="center">
+  <em>Gauche : chaque commune positionnee dans son cycle (Bottom = zone d'achat, Boom = zone de vente).
+  Droite : classement par score d'attractivite composite (0-100).</em>
+</p>
+
+### Pouvoir d'achat reel et drawdown
+
+<p align="center">
+  <img src="docs/assets/fig_affordability.svg" alt="Affordability" width="48%" />
+  <img src="docs/assets/fig_drawdown.svg" alt="Drawdown" width="48%" />
+</p>
+
+<p align="center">
+  <em>Gauche : combien de m2 pour 3000 EUR/mois (combine prix ET taux d'interet).
+  Droite : distance au pic — les zones rouges (&lt;-15%) signalent des opportunites.</em>
+</p>
+
+### Prix ajuste des taux
+
+<p align="center">
+  <img src="docs/assets/fig_rate_adjusted.svg" alt="Rate Adjusted" width="90%" />
+</p>
+
+<p align="center">
+  <em>Compare le prix nominal au prix "a taux constant" (3.5%). Revele si la hausse des taux masque
+  une baisse reelle des prix ou l'inverse.</em>
+</p>
+
+---
+
 ## Architecture
 
 ```mermaid
