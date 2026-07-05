@@ -10,6 +10,7 @@ from __future__ import annotations
 import io
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+from urllib.parse import urljoin
 
 import httpx
 import numpy as np
@@ -42,6 +43,21 @@ _TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 # ---------------------------------------------------------------------------
 
 
+def _parse_year_urls(html: str, url_root: str) -> list[str]:
+    """Extract DVF year directory URLs from an HTML listing."""
+    soup = BeautifulSoup(html, "html.parser")
+    years: set[str] = set()
+    for anchor in soup.find_all("a"):
+        href = str(anchor.get("href", "")).strip()
+        year = href.rstrip("/").split("/")[-1]
+        if not href or ".." in href or not year.isdigit():
+            continue
+        full = urljoin(url_root.rstrip("/") + "/", href)
+        years.add(full.rstrip("/") + "/")
+
+    return sorted(years)
+
+
 def list_available_years(url_root: str = DEFAULT_URL_ROOT) -> list[str]:
     """Scrape year directory URLs from the DVF file listing page.
 
@@ -53,15 +69,7 @@ def list_available_years(url_root: str = DEFAULT_URL_ROOT) -> list[str]:
         resp = client.get(url_root)
         resp.raise_for_status()
 
-    soup = BeautifulSoup(resp.text, "html.parser")
-    years: list[str] = []
-    for anchor in soup.find_all("a"):
-        href = anchor.get("href", "")
-        if href and ".." not in href and href.strip("/").isdigit():
-            full = url_root.rstrip("/") + "/" + href.strip("/") + "/"
-            years.append(full)
-
-    years.sort()
+    years = _parse_year_urls(resp.text, url_root)
     logger.info("Found {} year(s): {}", len(years), [y.rstrip("/").split("/")[-1] for y in years])
     return years
 
