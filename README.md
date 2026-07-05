@@ -228,9 +228,11 @@ Le fichier `config/default.yml` controle l'ensemble du pipeline :
 
 ```yaml
 communes:
-  Brest:   { depart: 29, ninsee: 29019 }
-  Lorient: { depart: 56, ninsee: 56121 }
-  Le Havre: { depart: 76, ninsee: 76351 }
+  Brest:      { depart: 29, ninsee: 29019 }
+  Quimper:    { depart: 29, ninsee: 29232 }
+  Concarneau: { depart: 29, ninsee: 29039 }
+  Lorient:    { depart: 56, ninsee: 56121 }
+  Le Havre:   { depart: 76, ninsee: 76351 }
 
 filters:
   type_local: ["Appartement"]

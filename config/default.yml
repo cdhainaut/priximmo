@@ -7,6 +7,12 @@ communes:
   Brest:
     depart: 29
     ninsee: 29019
+  Quimper:
+    depart: 29
+    ninsee: 29232
+  Concarneau:
+    depart: 29
+    ninsee: 29039
   Lorient:
     depart: 56
     ninsee: 56121

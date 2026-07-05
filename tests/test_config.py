@@ -19,13 +19,13 @@ def _chdir_to_repo(tmp_path, monkeypatch):
 def test_load_default_config():
     cfg = load_config(Path("config/default.yml"))
     assert isinstance(cfg, AppConfig)
-    assert len(cfg.communes) == 3
+    assert len(cfg.communes) == 5
 
 
 def test_load_config_none():
     cfg = load_config(None)
     assert isinstance(cfg, AppConfig)
-    # Should find config/default.yml and return 3 communes,
+    # Should find config/default.yml and return 5 communes,
     # or return pure defaults (0 communes) if file not found.
     # From the repo root it should find the file.
     assert isinstance(cfg.communes, dict)

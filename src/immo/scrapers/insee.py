@@ -151,6 +151,8 @@ def _mock_population(insee_codes: list[int]) -> pd.DataFrame:
     # A few well-known communes for convenience
     known: dict[int, tuple[str, int]] = {
         29019: ("Brest", 139_386),
+        29232: ("Quimper", 64_385),
+        29039: ("Concarneau", 20_845),
         56121: ("Lorient", 57_149),
         76351: ("Le Havre", 170_352),
         75056: ("Paris", 2_133_111),
