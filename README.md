@@ -232,6 +232,8 @@ communes:
   Quimper:    { depart: 29, ninsee: 29232 }
   Concarneau: { depart: 29, ninsee: 29039 }
   Lorient:    { depart: 56, ninsee: 56121 }
+  Nantes:     { depart: 44, ninsee: 44109 }
+  Rezé:       { depart: 44, ninsee: 44143 }
   Le Havre:   { depart: 76, ninsee: 76351 }
 
 filters:

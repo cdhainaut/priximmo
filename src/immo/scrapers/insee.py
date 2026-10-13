@@ -154,6 +154,8 @@ def _mock_population(insee_codes: list[int]) -> pd.DataFrame:
         29232: ("Quimper", 64_385),
         29039: ("Concarneau", 20_845),
         56121: ("Lorient", 57_149),
+        44109: ("Nantes", 327_734),
+        44143: ("Rezé", 43_556),
         76351: ("Le Havre", 170_352),
         75056: ("Paris", 2_133_111),
         69123: ("Lyon", 522_228),
